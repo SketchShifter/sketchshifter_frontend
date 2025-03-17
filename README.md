@@ -12,6 +12,10 @@ npm install
 
 # 開発サーバーの起動
 npm run dev
+
+# もし競合したら
+git pull --rebase origin main
+
 ```
 
 ## 機能概要
