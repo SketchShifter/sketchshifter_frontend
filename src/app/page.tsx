@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -9,9 +10,11 @@ export default function HomePage() {
   return (
     <div>
       <h1>Processing作品共有プラットフォーム - ホームページ</h1>
-      <p className="">ここには人気作品や最新作品のギャラリーが表示されます</p>
+      <p className="mb-4">ここには人気作品や最新作品のギャラリーが表示されます</p>
       <p>カウント: {count}</p>
-      <button className="bg-blue-500 text-white p-2 rounded" onClick={() => setCount(count + 1)}>
+      <Button onClick={() => alert('Your face is so beautiful!')}>クリックしてね！</Button>
+      <br />
+      <button className="rounded bg-blue-500 p-2 text-white" onClick={() => setCount(count + 1)}>
         カウントを増やす
       </button>
       <ul>
@@ -22,7 +25,12 @@ export default function HomePage() {
           <Link href="/mylist">マイリスト</Link>
         </li>
         <li>
-          <Link href="/login">ログイン</Link>
+          <Link
+            className="mb-4 flex-1/2 justify-center rounded-2xl bg-blue-500 px-4 py-2 text-white"
+            href="/login"
+          >
+            ログイン
+          </Link>
         </li>
         <li>
           <Link href="/register">アカウント登録</Link>
