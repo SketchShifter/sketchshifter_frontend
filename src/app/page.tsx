@@ -50,7 +50,6 @@ export default function HomePage() {
 
   return (
     <div>
-      <TopBar username={user?.nickname || "ゲスト"} />
       <HomeGallery data={data} />
     </div>
   );
