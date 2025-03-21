@@ -2,15 +2,47 @@
 
 import { useEffect, useState } from 'react';
 import WorksCard from '../components/workscard';
+import TopBar from '@/components/topbar';
 
 export default function HomePage() {
   const [data, setData] = useState([] as any);
+  const [user, setUser] = useState(null as any);
+
+  //作品を取得
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await fetch('http://localhost:8080/api/v1/works');
+      const data = await response.json();
+      setData(data);
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch('http://localhost:8080/api/works');
-      const data = await response.json();
-      setData(data);
+      try {
+        const token = localStorage.getItem('token'); // トークンをローカルストレージから取得
+        if (!token) {
+          setUser(null);
+          return;
+        }
+
+        const response = await fetch('http://localhost:8080/api/v1/auth/me', {
+          headers: {
+            Authorization: `Bearer ${token}`, // トークンをAuthorizationヘッダーに追加
+          },
+        });
+
+        if (!response.ok) {
+          console.log('ユーザー情報の取得に失敗しました。');
+          return;
+        }
+
+        const user = await response.json();
+        setUser(user); // ユーザー情報をステートに保存
+      } catch (error) {
+        console.error('エラーが発生しました:', error);
+      }
     };
     fetchData();
   }, []);
@@ -28,6 +60,7 @@ export default function HomePage() {
             date={work.created_at}
             description={work.description}
             username={work.user.nickname}
+            thumbnail={work.thumbnail_url}
           />
         ))}
       </div>

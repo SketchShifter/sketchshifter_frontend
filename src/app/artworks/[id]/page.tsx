@@ -10,7 +10,7 @@ export default function ArtworkDetailPage({ params }: { params: { id: string } }
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/api/works/${id}`);
+        const response = await fetch(`http://localhost:8080/api/v1/works/${id}`);
         if (!response.ok) {
           throw new Error(`Failed to fetch data: ${response.status}`);
         }
@@ -42,7 +42,7 @@ export default function ArtworkDetailPage({ params }: { params: { id: string } }
         <p>{`閲覧数:${data.views}`}</p>
       </div>
       <h1 className="flex justify-start text-2xl font-bold text-center mb-4">{data.title}</h1>
-      <p className="m-0 text-md text-gray-500 mb-5">{`by ${data.user.nickname}`}</p>
+      {/* <p className="m-0 text-md text-gray-500 mb-5">{`by ${data.user.nickname}`}</p> */}
       <div className="flex space-x-2 mb-2">
         {data.tags && data.tags.map((tag: { id: number; name: string }) => (
           <span
