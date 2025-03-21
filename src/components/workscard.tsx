@@ -16,7 +16,7 @@ const WorksCard: React.FC<CardProps> = ({ id, title, date, description, username
       <Card className="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden rounded-lg p-0">
         <div className="w-full aspect-[16/9] overflow-hidden leading-none">
           <img
-            src={thumbnail}
+            src={`http://localhost:3000${thumbnail}`}
             alt={title}
             className="w-full h-full object-cover block"
           />

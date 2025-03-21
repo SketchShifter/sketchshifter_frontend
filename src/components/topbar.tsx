@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-const TopBar = () => {
+const TopBar = ({ username }: { username: string }) => {
   return (
     <div className="bg-gray-800 p-4 flex justify-between items-center">
       <h1 className="text-white text-xl">
@@ -22,9 +22,12 @@ const TopBar = () => {
         <button className="text-white">
           <Link href={"/login"}>ログイン</Link>
         </button>
-        <button className="text-white">
-          <Link href={"register"}>アカウント登録</Link>
-        </button>
+        {username == "ゲスト" && (
+          <button className="text-white">
+            <Link href={"register"}>アカウント登録</Link>
+          </button>
+        )}
+        <p className="text-white">{`${username} さん`}</p>
       </div>
     </div>
   );

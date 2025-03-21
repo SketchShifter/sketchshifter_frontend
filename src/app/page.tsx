@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import WorksCard from '../components/workscard';
 import TopBar from '@/components/topbar';
+import HomeGallery from '@/components/home-gallery';
 
 export default function HomePage() {
   const [data, setData] = useState([] as any);
@@ -48,22 +49,9 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="container mx-auto px-4">
-      {/* コンテンツ全体を中央揃え */}
-      <p className="mb-4">ここには人気作品や最新作品のギャラリーが表示されます</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {data.works && data.works.map((work) => (
-          <WorksCard
-            key={work.id}
-            id={work.id}
-            title={work.title}
-            date={work.created_at}
-            description={work.description}
-            username={work.user.nickname}
-            thumbnail={work.thumbnail_url}
-          />
-        ))}
-      </div>
+    <div>
+      <TopBar username={user?.nickname || "ゲスト"} />
+      <HomeGallery data={data} />
     </div>
   );
 }
