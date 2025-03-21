@@ -3,6 +3,7 @@
 import { use } from "react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { HeartIcon, EyeIcon } from "@heroicons/react/24/solid";
 
 export default function ArtworkDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params); // use() を使って params を展開
@@ -40,8 +41,16 @@ export default function ArtworkDetailPage({ params }: { params: Promise<{ id: st
         />
       </div>
       <div className="flex justify-end items-center space-x-4 mb-4">
-        <p>{`いいね数:${data.work.likes_count}`}</p>
-        <p>{`閲覧数:${data.work.views}`}</p>
+        {/* いいね数 */}
+        <p className="flex items-center space-x-1">
+          <HeartIcon className="w-5 h-5 text-red-500" />
+          <span>{data.work.likes_count}</span>
+        </p>
+        {/* 閲覧数 */}
+        <p className="flex items-center space-x-1">
+          <EyeIcon className="w-5 h-5 text-gray-500" />
+          <span>{data.work.views}</span>
+        </p>
       </div>
       <h1 className="flex justify-start text-2xl font-bold text-center mb-4">{data.work.title}</h1>
       <div className="flex space-x-2 mb-2">
