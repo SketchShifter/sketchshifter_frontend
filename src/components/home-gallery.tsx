@@ -24,7 +24,6 @@ export default function HomeGallery({ data }: HomeGalleryProps) {
             {/* <p className="mb-4">ここには人気作品や最新作品のギャラリーが表示されます</p> */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {data.works && data.works.map((work) => (
-                    console.log(work.thumbnail_url),
                     <WorksCard
                         key={work.id}
                         id={work.id}
