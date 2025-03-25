@@ -1,5 +1,5 @@
 import Link from "next/link";
-
+import { Login } from '@/components/auth/Login';
 export default function LoginPage() {
   return (
     <div>
@@ -11,6 +11,7 @@ export default function LoginPage() {
       <div>
         <Link href="/">ホームに戻る</Link>
       </div>
+      <Login />
     </div>
   );
 }
