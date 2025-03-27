@@ -1,6 +1,8 @@
+'use client'
+
 import { getAuthSession } from '@/lib/auth';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 
 const TopBar = () => {
   useEffect(() => {
