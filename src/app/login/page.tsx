@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
-
+import { Login } from '@/components/auth/Login';
 export default function LoginPage() {
   const [formData, setFormData] = useState({
     email: "",

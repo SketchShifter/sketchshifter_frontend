@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Register } from "@/components/auth/Register";
+import Link from "next/link";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
