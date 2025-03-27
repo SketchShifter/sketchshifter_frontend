@@ -23,12 +23,13 @@ type reqDataProps = {
   headers: any
   body?: any
 }
-type ReturnDataProps = {
+export type ReturnDataProps = {
   id: string
   name: string
   email: string
   role?: string
-}
+} | null
+
 const getToken = async () => {
   const token = await localStorage.getItem('token');
   if (!token){

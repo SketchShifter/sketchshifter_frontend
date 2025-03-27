@@ -1,10 +1,11 @@
 'use client'
 
-import { getAuthSession } from '@/lib/auth';
+import { getAuthSession, type ReturnDataProps } from '@/lib/auth';
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 const TopBar = () => {
+  const [session, setSession] = useState<ReturnDataProps>(null)
   useEffect(() => {
     async () => {
       const session = await getAuthSession()
@@ -14,8 +15,14 @@ const TopBar = () => {
       //   email: string
       //   role?: string // 追加機能に使うかも？
       // }
+      setSession(session);
     }
   },[])
+  if(session){
+    // ログイン済みの場合(nullじゃないとき)
+  }else{
+    // ログインしていない場合(null)
+  }
     return (
       <div className="bg-gray-800 p-4 flex justify-between items-center">
         <h1 className="text-white text-xl">
