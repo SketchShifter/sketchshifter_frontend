@@ -1,3 +1,4 @@
+import { Register } from "@/components/auth/Register";
 import Link from "next/link";
 
 export default function RegisterPage() {
@@ -11,6 +12,7 @@ export default function RegisterPage() {
       <div>
         <Link href="/">ホームに戻る</Link>
       </div>
+      <Register />
     </div>
   );
 }

@@ -4,15 +4,16 @@ import { API_URL } from "@/lib/api";
 import { getAuthSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, FieldError } from "react-hook-form";
 
 const redirectTo = ""
 
 interface InputType {
-    email: string;
+    passwordNow: string;
     password: string;
+    passwordRe: string;
 }
-const Login = () => {
+const Reset = () => {
     const [loading, setLoading] = useState(false);
 
     const {
@@ -20,6 +21,7 @@ const Login = () => {
         watch,
         handleSubmit,
         formState: { errors },
+        getValues
     } = useForm<InputType>({
         mode: 'onBlur'
     });
@@ -47,6 +49,9 @@ const Login = () => {
 
     const loginReq = async (data: InputType) => {
         try {
+            if(data.password !== data.passwordRe){
+                throw Error
+            }
             const res = await fetch(`${API_URL}/auth/login`,{
                 method: 'POST',
                 headers: {
@@ -71,7 +76,7 @@ const Login = () => {
     }
 
     const isValid = (data: InputType) => {
-        alert(`${data.email} is email and password is ${data.password}`);
+        alert(`password is ${data.password}`);
         setLoading(true);
         loginReq(data);
     };
@@ -83,26 +88,29 @@ const Login = () => {
     return(<>
         <form onSubmit={handleSubmit(isValid, isInValid)} className="max-w-xs center mx-auto flex flex-nowrap flex-col items-center">
             <div className="w-full flex flex-nowrap flex-col p-1">
-                <label htmlFor="email">
-                    メールアドレス
+                <label htmlFor="passwordNow">
+                    現在のパスワード
                 </label>
                 <input
-                    {...register("email", { required: "メールアドレスを入力してください"})}
+                    {...register("passwordNow", {
+                        required: "現在のパスワードを入力してください",
+                        minLength: { value: 8, message: "8文字以上入力してください"}
+                    })}
                     className="border-2 border-solid rounded-sm"
-                    type="email"
-                    name="email"
+                    type="password"
+                    name="passwordNow"
                 />
                 <div className="text-[red] text-xs h-4">
-                    {errors.email?.message}
+                    {errors.passwordNow?.message}
                 </div>
             </div>
             <div className="w-full flex flex-nowrap flex-col p-1">
-                <label htmlFor="email">
-                    パスワード
+                <label htmlFor="password">
+                    新しいパスワード
                 </label>
                 <input
                     {...register("password", {
-                        required: "パスワードを入力してください",
+                        required: "新しいパスワードを入力してください",
                         minLength: { value: 8, message: "8文字以上入力してください"}
                     })}
                     className="border-2 border-solid rounded-sm"
@@ -113,15 +121,34 @@ const Login = () => {
                     {errors.password?.message}
                 </div>
             </div>
-            <div className={`px-4 py-2 w-fit rounded-full ${loading ? 'bg-gray-500' : 'bg-black'} text-white`}>
-                <input type="submit" value="ログイン" disabled={loading} />
+            <div className="w-full flex flex-nowrap flex-col p-1">
+                <label htmlFor="passwordRe">
+                    新しいパスワードを再入力
+                </label>
+                <input
+                    {...register("passwordRe", {
+                        required: "新しいパスワードを再入力してください",
+                        minLength: { value: 8, message: "8文字以上入力してください"},
+                        validate: {
+                            matchesPreviousPassword: (value) => {
+                                const { password } = getValues();
+                                return password === value || "パスワードが一致しません";
+                            }
+                        }
+                    })}
+                    className="border-2 border-solid rounded-sm"
+                    type="password"
+                    name="passwordRe"
+                />
+                <div className="text-[red] text-xs h-4">
+                    {errors.passwordRe?.message}
+                </div>
             </div>
-            <div>
-                <p><a href="/reset">パスワードをリセット</a></p>
-
+            <div className={`px-4 py-2 w-fit rounded-full ${loading ? 'bg-gray-500' : 'bg-black'} text-white`}>
+                <input type="submit" value="パスワードを変更" disabled={loading} />
             </div>
         </form>
     </>);
 }
 
-export {Login}
+export {Reset}

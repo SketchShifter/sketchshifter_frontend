@@ -1,6 +1,19 @@
+import { getAuthSession } from '@/lib/auth';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 const TopBar = () => {
+  useEffect(() => {
+    async () => {
+      const session = await getAuthSession()
+      // session = {
+      //   id: string
+      //   name: string
+      //   email: string
+      //   role?: string // 追加機能に使うかも？
+      // }
+    }
+  },[])
     return (
       <div className="bg-gray-800 p-4 flex justify-between items-center">
         <h1 className="text-white text-xl">
