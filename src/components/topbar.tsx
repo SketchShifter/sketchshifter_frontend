@@ -47,7 +47,13 @@ const TopBar = () => {
         <button className="text-white">
           <Link href={"register"}>アカウント登録</Link>
         </button>
-        <p className="text-white">{user ? `${user.nickname} さん` : "ゲスト さん"}</p>
+        {session ? (
+          <p className="text-white">{`${session.name} さん`}</p>
+        ) : (
+          <button className="text-white">
+            <Link href={"/login"}>ログイン</Link>
+          </button>
+        )}
       </div>
     </div>
   );
