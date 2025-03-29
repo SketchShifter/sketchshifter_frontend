@@ -9,6 +9,8 @@ import { formatDate } from '@/lib/formatDate';
 export default function ArtworkDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params); // use() を使って params を展開
   const [data, setData] = useState<any>(null);
+  const [isCodeVisible, setIsCodeVisible] = useState(false); // 開閉状態を管理
+  const [showScrollToTop, setShowScrollToTop] = useState(false); // スクロールボタンの表示状態を管理
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,6 +27,24 @@ export default function ArtworkDetailPage({ params }: { params: Promise<{ id: st
     };
     fetchData();
   }, [id]);
+
+  // スクロールイベントを監視してボタンの表示を切り替える
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowScrollToTop(true); // スクロール位置が300pxを超えたらボタンを表示
+      } else {
+        setShowScrollToTop(false); // それ以外の場合は非表示
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll); // クリーンアップ
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" }); // ページの一番上にスムーズにスクロール
+  };
 
   if (!data) {
     return <p>Loading...</p>;
@@ -68,9 +88,26 @@ export default function ArtworkDetailPage({ params }: { params: Promise<{ id: st
       <p className="text-lg font-bold">作品説明</p>
       <p className="mb-5">{data.work.description}</p>
       <p className="text-lg font-bold mb-2">ソースコード</p>
-      <div className="bg-gray-800 text-white p-4 rounded-md">
-        <pre className="whitespace-pre-wrap">{data.work.code_content}</pre>
-      </div>
+      <button
+        onClick={() => setIsCodeVisible(!isCodeVisible)} // 開閉状態を切り替え
+        className="mb-2 px-4 py-2 bg-blue-500 text-white rounded-md"
+      >
+        {isCodeVisible ? "非表示" : "表示"}
+      </button>
+      {isCodeVisible && ( // 開閉状態に応じて表示を切り替え
+        <div className="bg-gray-800 text-white p-4 rounded-md">
+          <pre className="whitespace-pre-wrap">{data.work.code_content + '\n'.repeat(100)}</pre>
+        </div>
+      )}
+
+      {showScrollToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-600 transition"
+        >
+          ↑ 一番上に戻る
+        </button>
+      )}
     </div>
   );
 }
