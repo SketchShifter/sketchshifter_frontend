@@ -1,6 +1,5 @@
 'use client';
 
-import { API_URL } from "@/lib/api";
 import { getAuthSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -67,7 +66,7 @@ const Register = () => {
                 name: data.name,
                 nickname: data.nickname
             }
-            const res = await fetch(`${API_URL}/auth/register`,{
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`,{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -88,7 +87,7 @@ const Register = () => {
             localStorage.setItem("token",token);
             loginSuccess(user.id);
         }catch(error: any){
-            console.error(error.message);
+            console.log(error);
             loginFailed(error);
             return error;
         }

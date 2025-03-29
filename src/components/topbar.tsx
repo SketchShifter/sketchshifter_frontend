@@ -7,22 +7,19 @@ import { useState, useEffect } from 'react';
 const TopBar = () => {
   const [session, setSession] = useState<ReturnDataProps>(null)
   useEffect(() => {
-    async () => {
-      const session = await getAuthSession()
-      // session = {
+    const fetchSession = async () => {
+      const getSession = await getAuthSession();
+      setSession(getSession);
+      console.log("session",session)
+    }
+      // getSession = {
       //   id: string
       //   name: string
       //   email: string
       //   role?: string // 追加機能に使うかも？
       // }
-      setSession(session);
-    }
+    fetchSession()
   }, [])
-  if (session) {
-    // ログイン済みの場合(nullじゃないとき)
-  } else {
-    // ログインしていない場合(null)
-  }
 
   return (
     <div className="bg-gray-800 p-4 flex justify-between items-center">
@@ -50,7 +47,7 @@ const TopBar = () => {
         <button className="text-white">
           <Link href={"/register"}>アカウント登録</Link>
         </button>
-        {/* <p className="text-white">{user ? `${user.nickname} さん` : "ゲスト さん"}</p> */} {/* ユーザ情報の取得が上手くいってないかも */}
+        <p className="text-white">{session ? `${session.nickname} さん` : "ゲスト さん"}</p> {/* ユーザ情報の取得が上手くいってないかも */}
       </div>
     </div>
   );

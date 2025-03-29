@@ -1,6 +1,5 @@
 'use client';
 
-import { API_URL } from "@/lib/api";
 import { getAuthSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -50,7 +49,7 @@ const Login = () => {
 
     const loginReq = async (data: InputType) => {
         try {
-            const res = await fetch(`${API_URL}/auth/login`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

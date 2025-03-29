@@ -13,7 +13,7 @@ export default function ArtworkDetailPage({ params }: { params: Promise<{ id: st
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/api/v1/works/${id}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/works/${id}`);
         if (!response.ok) {
           throw new Error(`Failed to fetch data: ${response.status}`);
         }
