@@ -83,134 +83,136 @@ export default function PostPage() {
     };
 
     return (
-        <div className="max-w-2xl mx-auto mt-10 p-6 bg-white shadow-md rounded-md">
-            <h1 className="text-2xl font-bold mb-4">作品投稿</h1>
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                        タイトル *
-                    </label>
-                    <input
-                        type="text"
-                        id="title"
-                        name="title"
-                        value={formData.title}
-                        onChange={handleChange}
-                        required
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    />
-                </div>
-                <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                        説明
-                    </label>
-                    <textarea
-                        id="description"
-                        name="description"
-                        value={formData.description}
-                        onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    />
-                </div>
-                <div>
-                    <label htmlFor="file" className="block text-sm font-medium text-gray-700">
-                        ファイル *
-                    </label>
-                    <input
-                        type="file"
-                        id="file"
-                        name="file"
-                        onChange={handleFileChange}
-                        required
-                        className="mt-1 block w-full text-sm text-gray-500"
-                    />
-                </div>
-                <div>
-                    <label htmlFor="thumbnail" className="block text-sm font-medium text-gray-700">
-                        サムネイル
-                    </label>
-                    <input
-                        type="file"
-                        id="thumbnail"
-                        name="thumbnail"
-                        onChange={handleFileChange}
-                        className="mt-1 block w-full text-sm text-gray-500"
-                    />
-                </div>
-                <div>
-                    <label htmlFor="code_shared" className="flex items-center">
-                        <input
-                            type="checkbox"
-                            id="code_shared"
-                            name="code_shared"
-                            checked={formData.code_shared}
-                            onChange={handleChange}
-                            className="mr-2"
-                        />
-                        コードを共有する
-                    </label>
-                </div>
-                <div>
-                    <label htmlFor="code_content" className="block text-sm font-medium text-gray-700">
-                        コード内容
-                    </label>
-                    <textarea
-                        id="code_content"
-                        name="code_content"
-                        value={formData.code_content}
-                        onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    />
-                </div>
-                <div>
-                    <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
-                        タグ (カンマ区切り)
-                    </label>
-                    <input
-                        type="text"
-                        id="tags"
-                        name="tags"
-                        value={formData.tags}
-                        onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    />
-                </div>
-                <div>
-                    <label htmlFor="is_guest" className="flex items-center">
-                        <input
-                            type="checkbox"
-                            id="is_guest"
-                            name="is_guest"
-                            checked={formData.is_guest}
-                            onChange={handleChange}
-                            className="mr-2"
-                        />
-                        ゲストとして投稿
-                    </label>
-                </div>
-                {formData.is_guest && (
+        <div className="min-h-screen bg-gray-100 py-10">
+            <div className="max-w-2xl mx-auto p-6 bg-white shadow-md rounded-md">
+                <h1 className="text-2xl font-bold mb-4">作品投稿</h1>
+                <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label htmlFor="guest_nickname" className="block text-sm font-medium text-gray-700">
-                            ゲストニックネーム
+                        <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                            タイトル *
                         </label>
                         <input
                             type="text"
-                            id="guest_nickname"
-                            name="guest_nickname"
-                            value={formData.guest_nickname}
+                            id="title"
+                            name="title"
+                            value={formData.title}
+                            onChange={handleChange}
+                            required
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                            説明
+                        </label>
+                        <textarea
+                            id="description"
+                            name="description"
+                            value={formData.description}
                             onChange={handleChange}
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         />
                     </div>
-                )}
-                <button
-                    type="submit"
-                    className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                    投稿
-                </button>
-            </form>
-            {message && <p className="mt-4 text-center text-sm text-red-500">{message}</p>}
+                    <div>
+                        <label htmlFor="file" className="block text-sm font-medium text-gray-700">
+                            ファイル *
+                        </label>
+                        <input
+                            type="file"
+                            id="file"
+                            name="file"
+                            onChange={handleFileChange}
+                            required
+                            className="mt-1 block w-full text-sm text-gray-500"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="thumbnail" className="block text-sm font-medium text-gray-700">
+                            サムネイル
+                        </label>
+                        <input
+                            type="file"
+                            id="thumbnail"
+                            name="thumbnail"
+                            onChange={handleFileChange}
+                            className="mt-1 block w-full text-sm text-gray-500"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="code_shared" className="flex items-center">
+                            <input
+                                type="checkbox"
+                                id="code_shared"
+                                name="code_shared"
+                                checked={formData.code_shared}
+                                onChange={handleChange}
+                                className="mr-2"
+                            />
+                            コードを共有する
+                        </label>
+                    </div>
+                    <div>
+                        <label htmlFor="code_content" className="block text-sm font-medium text-gray-700">
+                            コード内容
+                        </label>
+                        <textarea
+                            id="code_content"
+                            name="code_content"
+                            value={formData.code_content}
+                            onChange={handleChange}
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
+                            タグ (カンマ区切り)
+                        </label>
+                        <input
+                            type="text"
+                            id="tags"
+                            name="tags"
+                            value={formData.tags}
+                            onChange={handleChange}
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="is_guest" className="flex items-center">
+                            <input
+                                type="checkbox"
+                                id="is_guest"
+                                name="is_guest"
+                                checked={formData.is_guest}
+                                onChange={handleChange}
+                                className="mr-2"
+                            />
+                            ゲストとして投稿
+                        </label>
+                    </div>
+                    {formData.is_guest && (
+                        <div>
+                            <label htmlFor="guest_nickname" className="block text-sm font-medium text-gray-700">
+                                ゲストニックネーム
+                            </label>
+                            <input
+                                type="text"
+                                id="guest_nickname"
+                                name="guest_nickname"
+                                value={formData.guest_nickname}
+                                onChange={handleChange}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            />
+                        </div>
+                    )}
+                    <button
+                        type="submit"
+                        className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                        投稿
+                    </button>
+                </form>
+                {message && <p className="mt-4 text-center text-sm text-red-500">{message}</p>}
+            </div>
         </div>
     );
 }
