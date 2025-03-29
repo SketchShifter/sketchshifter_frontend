@@ -96,7 +96,7 @@ export default function ArtworkDetailPage({ params }: { params: Promise<{ id: st
       </button>
       {isCodeVisible && ( // 開閉状態に応じて表示を切り替え
         <div className="bg-gray-800 text-white p-4 rounded-md">
-          <pre className="whitespace-pre-wrap">{data.work.code_content + '\n'.repeat(100)}</pre>
+          <pre className="whitespace-pre-wrap">{data.work.code_content}</pre>
         </div>
       )}
 
