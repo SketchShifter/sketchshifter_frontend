@@ -16,13 +16,14 @@ interface CardProps {
 }
 
 const WorksCard: React.FC<CardProps> = ({ id, title, date, description, username, thumbnail }) => {
+  console.log(thumbnail);
   return (
     <Link href={`/artworks/${id}`} passHref>
       <Card className="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden rounded-lg p-0 relative">
         {/* 画像部分 */}
         <div className="w-full aspect-[16/9] overflow-hidden leading-none relative">
           <img
-            src={`http://localhost:3000${thumbnail}`}
+            src={thumbnail}
             alt={title}
             className="w-full h-full object-cover block"
           />

@@ -1,7 +1,6 @@
 'use client';
 
 import { use } from "react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { HeartIcon, EyeIcon } from "@heroicons/react/24/solid";
 import { formatDate } from '@/lib/formatDate';

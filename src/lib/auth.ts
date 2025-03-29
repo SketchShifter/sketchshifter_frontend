@@ -27,6 +27,7 @@ export type ReturnDataProps = {
   id: string
   name: string
   email: string
+  nickname: string
   role?: string
 } | null
 
@@ -164,6 +165,7 @@ export const getAuthSession = async ({ id = undefined }: { id?: string } = { id:
     id: user.id,
     name: user.name,
     email: user.email,
+    nickname: user.nickname,
     // role: user.role
   }
   return returnData;

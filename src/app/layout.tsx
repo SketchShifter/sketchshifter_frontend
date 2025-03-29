@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import './globals.css';
 import TopBar from '@/components/topbar';
 import { ToastContainer } from 'react-toastify';
