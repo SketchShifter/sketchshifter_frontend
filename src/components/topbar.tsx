@@ -10,7 +10,6 @@ const TopBar = () => {
     const fetchSession = async () => {
       const getSession = await getAuthSession();
       setSession(getSession);
-      console.log("session",session)
     }
       // getSession = {
       //   id: string

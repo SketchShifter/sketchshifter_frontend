@@ -32,7 +32,6 @@ export type ReturnDataProps = {
 
 const getToken = async () => {
   const token = await localStorage.getItem('token');
-  console.log(`TOKEN IS :${token}`) // REMOVE
   if (!token){
     return {"status": false, "ok": false}
   }else{
@@ -152,7 +151,6 @@ const Password = async () => {
 }
 
 export const getAuthSession = async ({id}:{id?:string}={id:undefined}) => {
-  console.log("getAuthSession")
   const session = await getToken()
   if(!session.ok){
     console.error("Failed to get session")
@@ -161,7 +159,6 @@ export const getAuthSession = async ({id}:{id?:string}={id:undefined}) => {
   const user = await fetchToken({
     path: 'me'
   })
-  console.log("user",user)
   if(!user.ok){
     console.error("Failed to fetch user data");
     throw new Error(`HTTP error! status: ${JSON.stringify(user)}`);
