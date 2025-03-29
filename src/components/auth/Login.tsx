@@ -5,6 +5,7 @@ import { getAuthSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useRouter } from 'next/navigation'; // 修正
 
 const redirectTo = ""
 
@@ -14,6 +15,7 @@ interface InputType {
 }
 const Login = () => {
     const [loading, setLoading] = useState(false);
+    const router = useRouter(); // useRouterを使用
 
     const {
         register,
@@ -28,7 +30,7 @@ const Login = () => {
             const user = await getAuthSession();
             // ログインしてたらリダイレクトする
             if (user) {
-                redirect(`${redirectTo}/${user.id}`);
+                redirect('/');
             }
         };
 
@@ -42,7 +44,8 @@ const Login = () => {
 
     // ログインに成功したときの処理
     const loginSuccess = (user_id: string) => {
-        redirect(`${redirectTo}/${user_id}`);
+        console.log("ログイン成功");
+        router.push('/');
     }
 
     const loginReq = async (data: InputType) => {

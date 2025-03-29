@@ -23,11 +23,12 @@ const TopBar = () => {
   } else {
     // ログインしていない場合(null)
   }
+
   return (
     <div className="bg-gray-800 p-4 flex justify-between items-center">
       <h1 className="text-white text-xl">
         <Link href={"/"}>
-          <img src="/ssjs.svg" alt="SketchShifter Logo" className="h-20 w-auto px-10" />
+          <img src="/ssjs.svg" alt="SketchShifter Logo" className="h-20 w-auto object-contain" />
         </Link>
       </h1>
       <div className="ml-auto flex space-x-4"> {/* ボタンを右端に配置 */}
