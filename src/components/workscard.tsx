@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { HeartIcon } from "@heroicons/react/24/solid";
 import { toast } from 'react-toastify';
+import { formatDate } from '../lib/formatDate';
 
 interface CardProps {
   id: string;
@@ -66,7 +67,7 @@ const WorksCard: React.FC<CardProps> = ({ id, title, date, description, username
           <CardTitle className="m-0 text-lg font-bold">{title}</CardTitle>
           <CardDescription className="m-0 text-sm text-gray-500 mb-5">{`by ${username}`}</CardDescription>
           <p className="mb-5">{description}</p> {/* descriptionの下にマージンを追加 */}
-          <p className="m-0 text-sm text-gray-500">{date}</p>
+          <p className="m-0 text-sm text-gray-500">{formatDate(date)}</p>
         </CardContent>
       </Card>
     </Link>

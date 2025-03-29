@@ -4,6 +4,7 @@ import { use } from "react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { HeartIcon, EyeIcon } from "@heroicons/react/24/solid";
+import { formatDate } from '@/lib/formatDate';
 
 export default function ArtworkDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params); // use() を使って params を展開
@@ -63,7 +64,7 @@ export default function ArtworkDetailPage({ params }: { params: Promise<{ id: st
           </span>
         ))}
       </div>
-      <p className="mb-5 text-md text-gray-500">{data.work.user.updated_at}</p>
+      <p className="mb-5 text-md text-gray-500">{formatDate(data.work.user.updated_at)}</p>
       <p className="text-lg font-bold">作品説明</p>
       <p className="mb-5">{data.work.description}</p>
       <p className="text-lg font-bold mb-2">ソースコード</p>
