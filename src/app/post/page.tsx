@@ -63,7 +63,7 @@ export default function PostPage() {
                 return;
             }
 
-            const response = await fetch("http://localhost:8080/api/v1/works", {
+            const response = await fetch("https://api.serendicode-sub.click/works", {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`, // トークンをAuthorizationヘッダーに追加

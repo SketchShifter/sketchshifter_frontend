@@ -12,7 +12,7 @@ export default function HomePage() {
   //作品を取得
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch('http://localhost:8080/api/v1/works');
+      const response = await fetch('https://api.serendicode-sub.click/works');
       const data = await response.json();
       setData(data);
     };
@@ -28,7 +28,7 @@ export default function HomePage() {
           return;
         }
 
-        const response = await fetch('http://localhost:8080/api/v1/auth/me', {
+        const response = await fetch('https://api.serendicode-sub.click/auth/me', {
           headers: {
             Authorization: `Bearer ${token}`, // トークンをAuthorizationヘッダーに追加
           },

@@ -32,7 +32,7 @@ const Register = () => {
         const checkAuthSession = async () => {
             const user = await getAuthSession();
             if (user) {
-                redirect(`${redirectTo}/${user.id}`);
+                window.location.href = '/'; // ホーム画面にリロード
             }
         };
 
@@ -61,7 +61,7 @@ const Register = () => {
             if (!res.ok) {
                 if (res.status === 409) {
                     alert("既に登録されています。");
-                    redirect(`/login`);
+                    window.location.href = '/login';
                 }
                 throw new Error(`レスポンスステータス: ${res.status}`);
             }
@@ -69,7 +69,7 @@ const Register = () => {
             const token = response.token;
             const user = response.user;
             localStorage.setItem("token", token);
-            redirect(`${redirectTo}/${user.id}`);
+            window.location.href = '/'; // ホーム画面にリロード
         } catch (error: any) {
             console.error(error.message);
         }

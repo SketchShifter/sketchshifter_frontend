@@ -32,7 +32,6 @@ export type ReturnDataProps = {
 
 const getToken = async () => {
   const token = await localStorage.getItem('token');
-  console.log("token", token)
   if (!token) {
     return { "status": false, "ok": false }
   } else {
