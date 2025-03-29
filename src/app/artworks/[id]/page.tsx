@@ -88,18 +88,27 @@ export default function ArtworkDetailPage({ params }: { params: Promise<{ id: st
       <p className="text-lg font-bold">作品説明</p>
       <p className="mb-5">{data.work.description}</p>
       <p className="text-lg font-bold mb-2">ソースコード</p>
-      <button
-        onClick={() => setIsCodeVisible(!isCodeVisible)} // 開閉状態を切り替え
-        className="mb-2 px-4 py-2 bg-blue-500 text-white rounded-md"
-      >
-        {isCodeVisible ? "非表示" : "表示"}
-      </button>
-      {isCodeVisible && ( // 開閉状態に応じて表示を切り替え
-        <div className="bg-gray-800 text-white p-4 rounded-md">
-          <pre className="whitespace-pre-wrap">{data.work.code_content}</pre>
-        </div>
+      {!data.work.code_shared ? (
+        // ソースコードが非公開の場合
+        <p className="mb-5">非公開</p>
+      ) : (
+        // ソースコードが公開の場合
+        <>
+          <button
+            onClick={() => setIsCodeVisible(!isCodeVisible)} // 開閉状態を切り替え
+            className="mb-2 px-4 py-2 bg-blue-500 text-white rounded-md"
+          >
+            {isCodeVisible ? "非表示" : "表示"}
+          </button>
+          {isCodeVisible && ( // 開閉状態に応じて表示を切り替え
+            <div className="bg-gray-800 text-white p-4 rounded-md">
+              <pre className="whitespace-pre-wrap">{data.work.code_content}</pre>
+            </div>
+          )}
+        </>
       )}
 
+      {/* ページの一番上に戻るボタン */}
       {showScrollToTop && (
         <button
           onClick={scrollToTop}
