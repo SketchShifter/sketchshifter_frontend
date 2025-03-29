@@ -30,30 +30,24 @@ const TopBar = () => {
       </h1>
       <div className="ml-auto flex space-x-4"> {/* ボタンを右端に配置 */}
         <button className="text-white">
-          投稿
+          <Link href={"/post"}>投稿</Link>
         </button>
         <button className="text-white">
-          <Link href={"artworks"}>作品一覧</Link>
+          <Link href={"/artworks"}>作品一覧</Link>
         </button>
         <button className="text-white">
-          <Link href={"mylist"}>マイリスト</Link>
+          <Link href={"/mylist"}>マイリスト</Link>
         </button>
         <button className="text-white">
-          <Link href={"preview"}>ゲストプレビュー</Link>
+          <Link href={"/preview"}>ゲストプレビュー</Link>
         </button>
         <button className="text-white">
           <Link href={"/login"}>ログイン</Link>
         </button>
         <button className="text-white">
-          <Link href={"register"}>アカウント登録</Link>
+          <Link href={"/register"}>アカウント登録</Link>
         </button>
-        {session ? (
-          <p className="text-white">{`${session.name} さん`}</p>
-        ) : (
-          <button className="text-white">
-            <Link href={"/login"}>ログイン</Link>
-          </button>
-        )}
+        {/* <p className="text-white">{user ? `${user.nickname} さん` : "ゲスト さん"}</p> */} {/* ユーザ情報の取得が上手くいってないかも */}
       </div>
     </div>
   );

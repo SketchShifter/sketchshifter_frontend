@@ -27,13 +27,13 @@ const Login = () => {
         const checkAuthSession = async () => {
             const user = await getAuthSession();
             // ログインしてたらリダイレクトする
-            if (user){
+            if (user) {
                 redirect(`${redirectTo}/${user.id}`);
             }
         };
 
         checkAuthSession();
-    },[])
+    }, [])
 
     // ログインに失敗したときの処理
     const loginFailed = (error: any) => {
@@ -47,23 +47,23 @@ const Login = () => {
 
     const loginReq = async (data: InputType) => {
         try {
-            const res = await fetch(`${API_URL}/auth/login`,{
+            const res = await fetch(`${API_URL}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(data)
             })
-            if(!res.ok) {
+            if (!res.ok) {
                 loginFailed(res);
                 throw new Error(`レスポンスステータス: ${res.status}`)
             }
             const responce = await res.json()
             const token = responce.token
             const user = responce.user
-            localStorage.setItem("token",token);
+            localStorage.setItem("token", token);
             loginSuccess(user.id);
-        }catch(error: any){
+        } catch (error: any) {
             console.error(error.message);
             loginFailed(error);
             return error;
@@ -80,14 +80,14 @@ const Login = () => {
     };
 
 
-    return(<>
+    return (<>
         <form onSubmit={handleSubmit(isValid, isInValid)} className="max-w-xs center mx-auto flex flex-nowrap flex-col items-center">
             <div className="w-full flex flex-nowrap flex-col p-1">
                 <label htmlFor="email">
                     メールアドレス
                 </label>
                 <input
-                    {...register("email", { required: "メールアドレスを入力してください"})}
+                    {...register("email", { required: "メールアドレスを入力してください" })}
                     className="border-2 border-solid rounded-sm"
                     type="email"
                     name="email"
@@ -103,7 +103,7 @@ const Login = () => {
                 <input
                     {...register("password", {
                         required: "パスワードを入力してください",
-                        minLength: { value: 8, message: "8文字以上入力してください"}
+                        minLength: { value: 8, message: "8文字以上入力してください" }
                     })}
                     className="border-2 border-solid rounded-sm"
                     type="password"
@@ -117,11 +117,11 @@ const Login = () => {
                 <input type="submit" value="ログイン" disabled={loading} />
             </div>
             <div>
-                <p><a href="/reset">パスワードをリセット</a></p>
+                <p><a href="login/reset">パスワードをリセット</a></p>
 
             </div>
         </form>
     </>);
 }
 
-export {Login}
+export { Login }
