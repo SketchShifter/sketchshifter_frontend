@@ -1,15 +1,22 @@
-import Link from 'next/link';
 import './globals.css';
 import TopBar from '@/components/topbar';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+
   return (
     <html lang="ja">
       <body>
         <header>
           <TopBar />
         </header>
-        <main className="container mx-auto max-w-6xl px-4 sm:px-8 md:px-12 lg:px-16 xl:px-24 py-4">{children}</main>
+        <main className="bg-gray-50">
+          <ToastContainer />
+          <div>
+            {children}
+          </div>
+        </main>
       </body>
     </html>
   );

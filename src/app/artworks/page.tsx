@@ -1,14 +1,24 @@
-import Link from "next/link";
+'use client';
+
+import HomeGallery from "@/components/home-gallery";
+import { useEffect, useState } from 'react';
 
 export default function ArtworksPage() {
+  const [data, setData] = useState([] as any);
+
+  //作品を取得
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/works`);
+      const data = await response.json();
+      setData(data);
+    };
+    fetchData();
+  }, []);
+
   return (
     <div>
-      <h1>作品一覧ページ</h1>
-      <p>ここではすべての作品が一覧表示されます</p>
-      <ul>
-        <li><Link href="/artworks/1">作品1の詳細</Link></li>
-        <li><Link href="/artworks/2">作品2の詳細</Link></li>
-      </ul>
+      <HomeGallery data={data} />
     </div>
   );
 }
