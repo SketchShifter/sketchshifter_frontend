@@ -66,13 +66,13 @@ const TopBar = () => {
   }
 
   return (
-    <div className="h-18 bg-gray-800 p-4 flex justify-between items-center w-full">
+    <div className="h-18 bg-gray-800 px-8 py-4 flex justify-between items-center w-full">
       <h1 className="text-white text-xl z-999">
         <Link href={"/"} onClick={()=>{setHumOpen(false)}}>
           <img src="/psb_small.svg" alt="SketchShifter Logo" className="h-14 w-auto" />
         </Link>
       </h1>
-      <div className={`md:hidden absolute right-5 top-5 z-999`}>
+      <div className={`md:hidden absolute right-10 top-5 z-999`}>
         <Hum open={humOpen} />
       </div>
       {/* <div> */}

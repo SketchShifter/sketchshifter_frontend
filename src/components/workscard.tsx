@@ -22,11 +22,7 @@ const WorksCard: React.FC<CardProps> = ({ id, title, date, description, username
       <Card className="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden rounded-lg p-0 relative">
         {/* 画像部分 */}
         <div className="w-full aspect-[16/9] overflow-hidden leading-none relative">
-          <img
-            src={thumbnail}
-            alt={title}
-            className="w-full h-full object-cover block"
-          />
+          <img src={thumbnail} alt={title} className="w-full h-full object-cover block"/>
           {/* いいねボタン */}
           <button
             className="absolute bottom-2 right-2 bg-white text-red-500 p-2 rounded-full shadow-md hover:bg-red-100 transition"

@@ -7,11 +7,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="ja">
-      <body>
-        <header>
+      <body className="overflow-y-scroll">
+        <header className='fixed z-997 w-screen'>
           <TopBar />
         </header>
-        <main className="bg-gray-50">
+        <main className="bg-gray-50 min-h-screen pt-20">
           <ToastContainer />
           <div>
             {children}
