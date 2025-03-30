@@ -1,7 +1,7 @@
 'use client';
 
 import { getAuthSession } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm, FieldError } from "react-hook-form";
 
@@ -18,6 +18,8 @@ interface InputType {
 const Register = () => {
     const [loading, setLoading] = useState(false);
 
+    const router = useRouter();
+
     const {
         register,
         handleSubmit,
@@ -31,7 +33,7 @@ const Register = () => {
         const checkAuthSession = async () => {
             const user = await getAuthSession();
             if (user) {
-                window.location.href = '/'; // ホーム画面にリロード
+                router.push('/') // ホーム画面にリロード
             }
         };
 
@@ -60,7 +62,7 @@ const Register = () => {
             if (!res.ok) {
                 if (res.status === 409) {
                     alert("既に登録されています。");
-                    window.location.href = '/login';
+                    router.push('/login');
                 }
                 throw new Error(`レスポンスステータス: ${res.status}`);
             }
@@ -68,6 +70,7 @@ const Register = () => {
             const token = responce.token
             const user = responce.user
             localStorage.setItem("token", token);
+            router.push('/login');
             // loginSuccess(user.id);
         } catch (error: any) {
             console.log(error);

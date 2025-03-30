@@ -1,20 +1,19 @@
 'use client';
 
 import { getAuthSession } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { redirect,useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from 'next/navigation';
-
 const redirectTo = "";
 
 interface InputType {
-    email: string;
-    password: string;
+    email: string
+    password: string
 }
 
 const Login = () => {
     const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState<string | null>(null);
     const router = useRouter();
 
     const {
@@ -36,13 +35,19 @@ const Login = () => {
         checkAuthSession();
     }, []);
 
-    const loginFailed = (error: any) => {
+    const loginFailed = (error: Response) => {
+        if(error.status === 401){
+            setMessage("パスワードが違うか、アカウントが存在しません。")
+            setLoading(false);
+        }else{
+            throw new Error(`unexpect error occuerd: ${error}`);
+        }
         return "";
     };
 
-    const loginSuccess = (user_id: string) => {
+    const loginSuccess = async () => {
         console.log("ログイン成功");
-        window.location.href = '/'; // ホーム画面にリロード
+        window.location.href = '/';
     };
 
     const loginReq = async (data: InputType) => {
@@ -56,17 +61,16 @@ const Login = () => {
             });
             if (!res.ok) {
                 loginFailed(res);
-                throw new Error(`レスポンスステータス: ${res.status}`);
+                console.error("res;", res)
+                throw new Error(`some error occured: ${res}`)
             }
             const response = await res.json();
             const token = response.token;
             const user = response.user;
-            localStorage.setItem("token", token);
-            loginSuccess(user.id);
+            await localStorage.setItem("token", token);
+            loginSuccess();
         } catch (error: any) {
-            console.error(error.message);
-            loginFailed(error);
-            return error;
+            throw new Error(`fetch error occured:${error}`);
         }
     };
 
@@ -83,6 +87,7 @@ const Login = () => {
         <div className="bg-gray-100 py-10">
             <div className="bg-white shadow-md rounded-lg p-8 max-w-md mx-auto">
                 <h1 className="text-2xl font-bold text-center mb-6">ログイン</h1>
+                <div>{message}</div>
                 <form onSubmit={handleSubmit(isValid, isInValid)} className="space-y-4">
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -127,12 +132,12 @@ const Login = () => {
                             {loading ? "ログイン中..." : "ログイン"}
                         </button>
                     </div>
-                    <div className="text-center">
-                        <a href="login/reset" className="text-blue-500 hover:underline text-sm">
-                            パスワードをリセット
-                        </a>
-                    </div>
                 </form>
+                <div className="text-center">
+                    <a href="login/reset" className="text-blue-500 hover:underline text-sm">
+                        パスワードをリセット
+                    </a>
+                </div>
             </div>
         </div>
     );
