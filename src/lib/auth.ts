@@ -66,11 +66,12 @@ const fetchToken = async ({ path, method = 'GET', headers, body }: fetchTokenPro
     if (body) {
       requestdata.body = body;
     }
+    console.log(requestdata)
     const req = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/${path}`, requestdata);
 
-    if (!req.ok) {
-      return { error: "can't fetch", isLogin: true, ...req }
-    }
+    // if (!req.ok) {
+    //   return { error: "can't fetch", isLogin: true, ...req }
+    // }
     const reqData = await req.json();
     return { isLogin: true, ok: true, ...reqData };
   } catch (error) {

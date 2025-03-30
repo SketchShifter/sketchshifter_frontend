@@ -1,6 +1,7 @@
 'use client'
 
 import { getAuthSession, type ReturnDataProps } from '@/lib/auth';
+import { set } from 'date-fns';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
@@ -21,6 +22,11 @@ const TopBar = () => {
     fetchSession()
   }, [])
 
+  const handleLogout = async () => {
+    setSession(null);
+    localStorage.removeItem('token'); // トークンをローカルストレージから削除
+  }
+
   return (
     <div className="bg-gray-800 p-4 flex justify-between items-center">
       <h1 className="text-white text-xl">
@@ -29,25 +35,45 @@ const TopBar = () => {
         </Link>
       </h1>
       <div className="ml-auto flex space-x-4">
-        <button className="text-white">
-          <Link href={"/post"}>投稿</Link>
-        </button>
-        <button className="text-white">
-          <Link href={"/artworks"}>作品一覧</Link>
-        </button>
-        <button className="text-white">
-          <Link href={"/mylist"}>マイリスト</Link>
-        </button>
-        <button className="text-white">
-          <Link href={"/preview"}>ゲストプレビュー</Link>
-        </button>
-        <button className="text-white">
-          <Link href={"/login"}>ログイン</Link>
-        </button>
-        <button className="text-white">
-          <Link href={"/register"}>アカウント登録</Link>
-        </button>
-        <p className="text-white">{session ? `${session.nickname} さん` : "ゲスト さん"}</p> {/* ユーザ情報の取得が上手くいってないかも */}
+        {session ? (
+          <>
+            <button className="text-white">
+              <Link href={"/post"}>投稿</Link>
+            </button>
+            <button className="text-white">
+              <Link href={"/artworks"}>作品一覧</Link>
+            </button>
+            <button className="text-white">
+              <Link href={"/mylist"}>マイリスト</Link>
+            </button>
+            <button className="text-white">
+              <Link href={"/preview"}>ゲストプレビュー</Link>
+            </button>
+            <button className="text-white" onClick={handleLogout}>
+              ログアウト
+            </button>
+            <p className="text-white">{`${session.nickname} さん`}</p>
+          </>
+        ) : (
+          <>
+            <button className="text-white">
+              <Link href={"/post"}>投稿</Link>
+            </button>
+            <button className="text-white">
+              <Link href={"/artworks"}>作品一覧</Link>
+            </button>
+            <button className="text-white">
+              <Link href={"/preview"}>ゲストプレビュー</Link>
+            </button>
+            <button className="text-white">
+              <Link href={"/login"}>ログイン</Link>
+            </button>
+            <button className="text-white">
+              <Link href={"/register"}>アカウント登録</Link>
+            </button>
+            <p className="text-white">ゲスト さん</p>
+          </>
+        )}
       </div >
     </div >
   );
