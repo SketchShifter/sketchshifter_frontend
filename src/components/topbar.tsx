@@ -4,10 +4,10 @@ import { getAuthSession, type ReturnDataProps } from '@/lib/auth';
 import { set } from 'date-fns';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+// import { useSelector } from 'react-redux';
 
 const TopBar = () => {
   const [session, setSession] = useState<ReturnDataProps>(null)
-  console.log(session); // セッション情報をログに出力
   useEffect(() => {
     const fetchSession = async () => {
       const getSession = await getAuthSession();

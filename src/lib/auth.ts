@@ -1,4 +1,4 @@
-'use clinet'
+'use client'
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -66,7 +66,7 @@ const fetchToken = async ({ path, method = 'GET', headers, body }: fetchTokenPro
     if (body) {
       requestdata.body = body;
     }
-    console.log(requestdata)
+    // console.log(requestdata)
     const req = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/${path}`, requestdata);
 
     // if (!req.ok) {
@@ -152,9 +152,15 @@ const Password = async () => {
 }
 
 export const getAuthSession = async ({ id }: { id?: string } = { id: undefined }) => {
+  // const dummy:ReturnDataProps = {
+  //   id: "sheep",
+  //   name: "ひつじ",
+  //   nickname: "ひつじ",
+  //   email: "hogehoge@huga.nya"
+  // }
+  // return(dummy)
   const session = await getToken()
   if (!session.ok) {
-    console.error("Failed to get session")
     return null;
   }
   const user = await fetchToken({
