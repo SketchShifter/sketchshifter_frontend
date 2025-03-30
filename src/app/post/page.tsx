@@ -63,7 +63,7 @@ export default function PostPage() {
                 return;
             }
 
-            const response = await fetch("https://api.serendicode-sub.click/works", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/works`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`, // トークンをAuthorizationヘッダーに追加

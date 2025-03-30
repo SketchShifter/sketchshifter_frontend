@@ -1,6 +1,5 @@
 'use client';
 
-import { API_URL } from "@/lib/api";
 import { getAuthSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -50,8 +49,8 @@ const Register = () => {
                 password: data.password,
                 name: data.name,
                 nickname: data.nickname
-            };
-            const res = await fetch(`${API_URL}/auth/register`, {
+            }
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -65,13 +64,15 @@ const Register = () => {
                 }
                 throw new Error(`レスポンスステータス: ${res.status}`);
             }
-            const response = await res.json();
-            const token = response.token;
-            const user = response.user;
+            const responce = await res.json()
+            const token = responce.token
+            const user = responce.user
             localStorage.setItem("token", token);
-            window.location.href = '/'; // ホーム画面にリロード
+            loginSuccess(user.id);
         } catch (error: any) {
-            console.error(error.message);
+            console.log(error);
+            loginFailed(error);
+            return error;
         }
     };
 
