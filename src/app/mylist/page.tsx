@@ -1,14 +1,48 @@
+'use client';
+
+import HomeGallery from "@/components/home-gallery";
 import Link from "next/link";
+import { useEffect, useState } from 'react';
 
 export default function MyListPage() {
+  const [data, setData] = useState([] as any);
+
+  // 作品を取得
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token"); // ローカルストレージからトークンを取得
+
+        if (!token) {
+          console.error("トークンが見つかりません。ログインしてください。");
+          return;
+        }
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/my-works`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`, // トークンをAuthorizationヘッダーに追加
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          console.error("データの取得に失敗しました。");
+          return;
+        }
+
+        const data = await response.json();
+        setData(data);
+      } catch (error) {
+        console.error("エラーが発生しました:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
   return (
     <div>
-      <h1>マイリスト - 自分の作品一覧</h1>
-      <p>あなたがアップロードした作品が表示されます</p>
-      <ul>
-        <li><Link href="/mylist/submit">新しい作品を投稿する</Link></li>
-        <li><Link href="/mylist/edit/1">作品1を編集する</Link></li>
-      </ul>
+      <HomeGallery data={data} />
     </div>
   );
 }

@@ -83,7 +83,7 @@ export default function PostPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 py-10">
+        <div className="min-h-screen py-10">
             <div className="max-w-2xl mx-auto p-6 bg-white shadow-md rounded-md">
                 <h1 className="text-2xl font-bold mb-4">作品投稿</h1>
                 <form onSubmit={handleSubmit} className="space-y-4">

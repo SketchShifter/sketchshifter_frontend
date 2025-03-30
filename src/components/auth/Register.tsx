@@ -68,10 +68,10 @@ const Register = () => {
             const token = responce.token
             const user = responce.user
             localStorage.setItem("token", token);
-            loginSuccess(user.id);
+            // loginSuccess(user.id);
         } catch (error: any) {
             console.log(error);
-            loginFailed(error);
+            // loginFailed(error);
             return error;
         }
     };
