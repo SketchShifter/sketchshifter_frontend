@@ -1,4 +1,4 @@
-# sketchshifter_front(フロントエンド)
+# sketchshifter_front(フロントエンドだにょー)
 
 ## とりあえず始める
 
