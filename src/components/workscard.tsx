@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Card, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { HeartIcon } from "@heroicons/react/24/solid";
 import { toast } from 'react-toastify';
@@ -22,10 +23,24 @@ const WorksCard: React.FC<CardProps> = ({ id, title, date, description, username
       <Card className="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden rounded-lg p-0 relative">
         {/* 画像部分 */}
         <div className="w-full aspect-[16/9] overflow-hidden leading-none relative">
-          <img src={thumbnail} alt={title} className="w-full h-full object-cover block"/>
+          {thumbnail ? (
+            <Image
+              src={thumbnail}
+              alt={title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          ) : (
+            // デフォルトの画像やプレースホルダーを表示
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <span>画像なし</span>
+            </div>
+          )}
           {/* いいねボタン */}
           <button
             className="absolute bottom-2 right-2 bg-white text-red-500 p-2 rounded-full shadow-md hover:bg-red-100 transition"
+            title="いいね"
             onClick={async (e) => {
               e.preventDefault(); // 親のリンク遷移を防ぐ
 

@@ -5,10 +5,11 @@ import { useEffect, useState } from "react";
 import { HeartIcon, EyeIcon } from "@heroicons/react/24/solid";
 import { formatDate } from '@/lib/formatDate';
 import { toast } from 'react-toastify';
-
+import { Work } from '@/types/dataType';
+import Image from 'next/image';
 export default function ArtworkDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params); // use() を使って params を展開
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<Work>({} as Work);
   const [isCodeVisible, setIsCodeVisible] = useState(false); // 開閉状態を管理
   const [showScrollToTop, setShowScrollToTop] = useState(false); // スクロールボタンの表示状態を管理
 
@@ -50,19 +51,20 @@ export default function ArtworkDetailPage({ params }: { params: Promise<{ id: st
     return <p>Loading...</p>;
   }
 
-  console.log(data.work.title);
+  console.log(data.title);
 
   return (
     <div className="container mx-auto px-4">
       <div className="flex justify-center items-center mb-4">
-        <img
-          src={data.work.thumbnail_url}
-          alt={data.work.title}
+        <Image
+          src={data.thumbnail_url}
+          alt={data.title}
           className="w-full max-w-md"
         />
       </div>
       <div className="flex justify-end items-center space-x-4 mb-4">
         <button
+          title="いいね"
           className="bottom-2 right-2 bg-white text-red-500 p-2 rounded-full shadow-md hover:bg-red-100 transition"
           onClick={async (e) => {
             e.preventDefault(); // 親のリンク遷移を防ぐ
@@ -97,10 +99,10 @@ export default function ArtworkDetailPage({ params }: { params: Promise<{ id: st
           <HeartIcon className="w-6 h-6" />
         </button>
       </div>
-      <h1 className="flex justify-start text-2xl font-bold text-center mb-4">{data.work.title}</h1>
-      <p className="text-md text-gray-500 mb-2">{`by ${data.work.user.nickname}`}</p>
+      <h1 className="flex justify-start text-2xl font-bold text-center mb-4">{data.title}</h1>
+      <p className="text-md text-gray-500 mb-2">{`by ${data.user.nickname}`}</p>
       <div className="flex space-x-2 mb-3">
-        {data.work.tags && data.work.tags.map((tag: { id: number; name: string }) => (
+        {data.tags && data.tags.map((tag: { id: number; name: string }) => (
           <span
             key={tag.id}
             className="px-3 py-1 bg-gray-200 text-sm text-gray-700 rounded-full"
@@ -113,19 +115,19 @@ export default function ArtworkDetailPage({ params }: { params: Promise<{ id: st
         {/* いいね数 */}
         <p className="flex items-center space-x-1">
           <HeartIcon className="w-5 h-5 text-red-500" />
-          <span>{data.work.likes_count}</span>
+          <span>{data.likes_count}</span>
         </p>
         {/* 閲覧数 */}
         <p className="flex items-center space-x-1">
           <EyeIcon className="w-5 h-5 text-gray-500" />
-          <span>{data.work.views}</span>
+          <span>{data.views}</span>
         </p>
       </div>
-      <p className="mb-5 text-md text-gray-500">{formatDate(data.work.user.updated_at)}</p>
+      <p className="mb-5 text-md text-gray-500">{formatDate(data.created_at)}</p>
       <p className="text-lg font-bold">作品説明</p>
-      <p className="mb-5">{data.work.description}</p>
+      <p className="mb-5">{data.description}</p>
       <p className="text-lg font-bold mb-2">ソースコード</p>
-      {!data.work.code_shared ? (
+      {!data.code_shared ? (
         // ソースコードが非公開の場合
         <p className="mb-5">非公開</p>
       ) : (
@@ -139,7 +141,7 @@ export default function ArtworkDetailPage({ params }: { params: Promise<{ id: st
           </button>
           {isCodeVisible && ( // 開閉状態に応じて表示を切り替え
             <div className="bg-gray-800 text-white p-4 rounded-md">
-              <pre className="whitespace-pre-wrap">{data.work.code_content}</pre>
+              <pre className="whitespace-pre-wrap">{data.code_content}</pre>
             </div>
           )}
         </>

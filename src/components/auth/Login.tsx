@@ -3,7 +3,7 @@
 import { getAuthSession } from "@/lib/auth";
 import { redirect, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, FieldErrors } from "react-hook-form";
 
 interface InputType {
     email: string
@@ -66,20 +66,19 @@ const Login = () => {
             }
             const response = await res.json();
             const token = response.token;
-            const user = response.user;
             await localStorage.setItem("token", token);
             loginSuccess();
-        } catch (error: any) {
+        } catch (error) {
             throw new Error(`fetch error occured:${error}`);
         }
     };
 
     const isValid = (data: InputType) => {
         setLoading(true);
-        loginReq(data);
+        loginReq(data); 
     };
 
-    const isInValid = (error: any) => {
+    const isInValid = (error: FieldErrors<InputType>) => {
         console.error("Validation error:", error);
     };
 

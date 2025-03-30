@@ -3,7 +3,7 @@
 import { getAuthSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useForm, FieldError } from "react-hook-form";
+import { useForm, FieldErrors } from "react-hook-form";
 
 const redirectTo = ""
 
@@ -17,7 +17,6 @@ const Reset = () => {
 
     const {
         register,
-        watch,
         handleSubmit,
         formState: { errors },
         getValues
@@ -37,7 +36,8 @@ const Reset = () => {
     },[])
 
     // ログインに失敗したときの処理
-    const loginFailed = (error: any) => {
+    const loginFailed = (error: Response) => {
+        console.error(error);
         return ""
     }
 
@@ -67,9 +67,11 @@ const Reset = () => {
             const user = responce.user
             localStorage.setItem("token",token);
             loginSuccess(user.id);
-        }catch(error: any){
-            console.error(error.message);
-            loginFailed(error);
+        }catch(error){
+            console.error(error);   
+            if (error instanceof Response) {
+                loginFailed(error);
+            }
             return error;
         }
     }
@@ -80,7 +82,8 @@ const Reset = () => {
         loginReq(data);
     };
 
-    const isInValid = (error: any) => {
+    const isInValid = (error: FieldErrors<InputType>) => {
+        console.error(error);
     };
 
 

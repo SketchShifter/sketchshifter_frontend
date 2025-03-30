@@ -1,9 +1,9 @@
 'use client'
 
 import { getAuthSession, type ReturnDataProps } from '@/lib/auth';
-import { set } from 'date-fns';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 // import { useSelector } from 'react-redux';
 
 const TopBar = () => {
@@ -28,7 +28,7 @@ const TopBar = () => {
     setSession(null);
     localStorage.removeItem('token'); // トークンをローカルストレージから削除
   }
-  const Button = ({title,props,btnprops}:{title:string,props?:any,btnprops?:any}) => {
+  const Button = ({title,props,btnprops}:{title:string,props:React.ComponentProps<typeof Link>,btnprops?:React.ButtonHTMLAttributes<HTMLButtonElement>}) => {
     return(
     <button className="text-white p-2 md:p-0 border-b border-solid md:border-none" {...btnprops} onClick={() => {setHumOpen(false)}}>
         <Link {...props}>{title}</Link>
@@ -54,7 +54,6 @@ const TopBar = () => {
           bottom:"-rotate-0 translate-none"
         })
       }
-      setCN
     },[open])
     return(<>
     <div className="flex flex-col w-full" onClick={() => {setHumOpen(!humOpen)}}>
@@ -69,7 +68,7 @@ const TopBar = () => {
     <div className="h-18 bg-gray-800 px-8 py-4 flex justify-between items-center w-full">
       <h1 className="text-white text-xl z-999">
         <Link href={"/"} onClick={()=>{setHumOpen(false)}}>
-          <img src="/psb_small.svg" alt="SketchShifter Logo" className="h-14 w-auto" />
+          <Image src="/psb_small.svg" alt="SketchShifter Logo" className="h-14 w-auto" width={56} height={56} />
         </Link>
       </h1>
       <div className={`md:hidden absolute right-10 top-5 z-999`}>

@@ -78,6 +78,7 @@ export default function PostPage() {
                 setMessage(`エラー: ${errorData.error || "投稿に失敗しました。"}`);
             }
         } catch (error) {
+            console.error(error);
             setMessage("サーバーに接続できませんでした。");
         }
     };

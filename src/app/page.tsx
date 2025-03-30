@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import HomeGallery from '@/components/home-gallery';
+import { ApiResponse } from '@/types/dataType';
 
 export default function HomePage() {
-  const [data, setData] = useState([] as any);
+  const [data, setData] = useState<ApiResponse>({ works: [] });
 
   //作品を取得
   useEffect(() => {

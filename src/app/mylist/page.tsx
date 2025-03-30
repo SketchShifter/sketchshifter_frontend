@@ -1,11 +1,11 @@
 'use client';
 
 import HomeGallery from "@/components/home-gallery";
-import Link from "next/link";
 import { useEffect, useState } from 'react';
+import { ApiResponse } from '@/types/dataType';
 
 export default function MyListPage() {
-  const [data, setData] = useState([] as any);
+  const [data, setData] = useState<ApiResponse>({ works: [] });
 
   // 作品を取得
   useEffect(() => {

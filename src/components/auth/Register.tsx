@@ -1,11 +1,11 @@
 'use client';
 
 import { getAuthSession } from "@/lib/auth";
-import { redirect, useRouter } from "next/navigation";
+import {useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useForm, FieldError } from "react-hook-form";
+import { useForm} from "react-hook-form";
 
-const redirectTo = "";
+
 
 interface InputType {
     email: string;
@@ -68,13 +68,10 @@ const Register = () => {
             }
             const responce = await res.json()
             const token = responce.token
-            const user = responce.user
             localStorage.setItem("token", token);
             router.push('/login');
-            // loginSuccess(user.id);
-        } catch (error: any) {
+        } catch (error) {
             console.log(error);
-            // loginFailed(error);
             return error;
         }
     };

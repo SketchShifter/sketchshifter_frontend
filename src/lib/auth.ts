@@ -1,8 +1,5 @@
 'use client'
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-
 type headersProps = {
   [key: string]: string
 }
@@ -10,17 +7,17 @@ type fetchTokenProps = {
   path: string
   method?: string
   headers?: headersProps
-  body?: any
+  body?: Record<string, unknown>
 }
 type fetchTokenReturnPorps = {
   ok: boolean
   isLogin: boolean
-  [key: string]: any
+  [key: string]: unknown
 }
 type reqDataProps = {
   method: string
-  headers: any
-  body?: any
+  headers: headersProps
+  body?: Record<string, unknown>
 }
 export type ReturnDataProps = {
   id: string
@@ -67,7 +64,7 @@ const fetchToken = async ({ path, method = 'GET', headers, body }: fetchTokenPro
       requestdata.body = body;
     }
     // console.log(requestdata)
-    const req = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/${path}`, requestdata);
+    const req = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/${path}`, requestdata as RequestInit);
 
     // if (!req.ok) {
     //   return { error: "can't fetch", isLogin: true, ...req }
@@ -79,77 +76,77 @@ const fetchToken = async ({ path, method = 'GET', headers, body }: fetchTokenPro
   }
 }
 
-const useAuth = () => {
-  const [loginUser, setLoginUser] = useState({
-    id: "",
-    email: "",
-    name: "",
-    nickname: "",
-    avater_url: "",
-    bio: "",
-    create_at: "",
-    updated_at: ""
-  });
-  const [isLoggedIn, setIsLoggedIn] = useState({
-    state: false,
-    token: "",
-    user: loginUser
-  });
-  const loginPagePath = "/user/login"
+// const useAuth = () => {
+//   const [loginUser, setLoginUser] = useState({
+//     id: "",
+//     email: "",
+//     name: "",
+//     nickname: "",
+//     avater_url: "",
+//     bio: "",
+//     create_at: "",
+//     updated_at: ""
+//   });
+//   const [isLoggedIn, setIsLoggedIn] = useState({
+//     state: false,
+//     token: "",
+//     user: loginUser
+//   });
+//   const loginPagePath = "/user/login"
 
-  const router = useRouter()
+//   const router = useRouter()
 
-  useEffect(() => {
-    const chkToken = async () => {
-      const tokens = await getToken()
-      if (!tokens.status || !tokens.token) {
-        return { "state": false }
-      }
-      const token: string = tokens.token
-      try {
-        const res = await fetchToken({
-          path: 'me'
-        })
-        if (!res.ok) {
-          // router.push(loginPagePath)
-          console.error("login failed")
-          return { state: false };
-        }
-        const responce = await res.json()
-        setLoginUser(responce);
-        setIsLoggedIn({
-          state: true,
-          token: token,
-          user: loginUser
-        })
-      } catch (error: any) {
-        throw Error;
-        return { state: false };
-      }
-    }
-  }, [router])
-  return isLoggedIn
-}
+//   useEffect(() => {
+//     const chkToken = async () => {
+//       const tokens = await getToken()
+//       if (!tokens.status || !tokens.token) {
+//         return { "state": false }
+//       }
+//       const token: string = tokens.token
+//       try {
+//         const res = await fetchToken({
+//           path: 'me'
+//         })
+//         if (!res.ok) {
+//           // router.push(loginPagePath)
+//           console.error("login failed")
+//           return { state: false };
+//         }
+//         const responce = await res.json()
+//         setLoginUser(responce);
+//         setIsLoggedIn({
+//           state: true,
+//           token: token,
+//           user: loginUser
+//         })
+//       } catch (error: any) {
+//         throw Error;
+//         return { state: false };
+//       }
+//     }
+//   }, [router])
+//   return isLoggedIn
+// }
 
-const Password = async () => {
-  const [current_password, setCurrentPassword] = useState("")
-  const [new_password, setNewPassword] = useState("")
+// const Password = async () => {
+//   const [current_password, setCurrentPassword] = useState("")
+//   const [new_password, setNewPassword] = useState("")
 
-  const body = {
-    "current_password": current_password,
-    "new_password": new_password
-  }
-  const res = await fetchToken({
-    path: 'password',
-    method: 'PUT',
-    body: body
-  })
+//   const body = {
+//     "current_password": current_password,
+//     "new_password": new_password
+//   }
+//   const res = await fetchToken({
+//     path: 'password',
+//     method: 'PUT',
+//     body: body
+//   })
 
-  if (!res.ok) {
+//   if (!res.ok) {
 
-  }
+//   }
 
-}
+// }
 
 export const getAuthSession = async ({ id }: { id?: string } = { id: undefined }) => {
   // const dummy:ReturnDataProps = {
@@ -175,11 +172,11 @@ export const getAuthSession = async ({ id }: { id?: string } = { id: undefined }
     return null
   }
   const returnData: ReturnDataProps = {
-    "id": user.id,
-    "name": user.name,
-    "nickname": user.nickname,
-    "email": user.email,
-    // role: user.role
+    "id": user.id as string,
+    "name": user.name as string,
+    "nickname": user.nickname as string,
+    "email": user.email as string,
+    // "role": user.role as string
   }
   return returnData;
 }
