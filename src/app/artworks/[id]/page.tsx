@@ -98,6 +98,7 @@ export default function ArtworkDetailPage({ params }: { params: Promise<{ id: st
         </button>
       </div>
       <h1 className="flex justify-start text-2xl font-bold text-center mb-4">{data.work.title}</h1>
+      <p className="text-md text-gray-500 mb-2">{`by ${data.work.user.nickname}`}</p>
       <div className="flex space-x-2 mb-3">
         {data.work.tags && data.work.tags.map((tag: { id: number; name: string }) => (
           <span
