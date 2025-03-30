@@ -102,7 +102,7 @@ export default function MyWorksPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">マイ作品一覧</h1>
+        <h1 className="text-xl font-bold md:text-3xl">マイ作品一覧</h1>
         <Link
           href="/mylist/submit"
           className="inline-flex items-center rounded-md bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 focus:outline-none"

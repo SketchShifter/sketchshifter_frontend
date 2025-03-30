@@ -69,7 +69,9 @@ const Register = () => {
       const responce = await res.json();
       const token = responce.token;
       localStorage.setItem('token', token);
-      router.push('/login');
+      await router.push('/');
+      window.location.reload();
+      router.refresh();
     } catch (error) {
       console.log(error);
       return error;
