@@ -1,10 +1,9 @@
 'use client';
 
 import { getAuthSession } from "@/lib/auth";
-import { redirect,useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-const redirectTo = "";
 
 interface InputType {
     email: string
@@ -47,8 +46,9 @@ const Login = () => {
 
     const loginSuccess = async () => {
         console.log("ログイン成功");
-        window.location.href = '/';
-    };
+        await router.push('/')
+        window.location.reload();
+        };
 
     const loginReq = async (data: InputType) => {
         try {
