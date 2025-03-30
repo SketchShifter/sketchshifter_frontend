@@ -1,70 +1,78 @@
-'use client'
+'use client';
 
 type headersProps = {
-  [key: string]: string
-}
+  [key: string]: string;
+};
 type fetchTokenProps = {
-  path: string
-  method?: string
-  headers?: headersProps
-  body?: Record<string, unknown>
-}
+  path: string;
+  method?: string;
+  headers?: headersProps;
+  body?: Record<string, unknown>;
+};
 type fetchTokenReturnPorps = {
-  ok: boolean
-  isLogin: boolean
-  [key: string]: unknown
-}
+  ok: boolean;
+  isLogin: boolean;
+  [key: string]: unknown;
+};
 type reqDataProps = {
-  method: string
-  headers: headersProps
-  body?: Record<string, unknown>
-}
+  method: string;
+  headers: headersProps;
+  body?: Record<string, unknown>;
+};
 export type ReturnDataProps = {
-  id: string
-  name: string
-  nickname: string
-  email: string
-  role?: string
-} | null
+  id: string;
+  name: string;
+  nickname: string;
+  email: string;
+  role?: string;
+} | null;
 
-const getToken = async () => {
+export const getToken = async () => {
   const token = await localStorage.getItem('token');
   if (!token) {
-    return { "status": false, "ok": false }
+    return { status: false, ok: false };
   } else {
-    return { "status": true, "ok": true, "token": token }
+    return { status: true, ok: true, token: token };
   }
-}
+};
 
-const fetchToken = async ({ path, method = 'GET', headers, body }: fetchTokenProps): Promise<fetchTokenReturnPorps> => {
-  const tokens = await getToken()
+const fetchToken = async ({
+  path,
+  method = 'GET',
+  headers,
+  body,
+}: fetchTokenProps): Promise<fetchTokenReturnPorps> => {
+  const tokens = await getToken();
   if (!tokens.status) {
-    console.error("Tokens status is false")
+    console.error('Tokens status is false');
     return {
-      "error": "client has no token",
-      "ok": false,
-      "isLogin": false
-    }
+      error: 'client has no token',
+      ok: false,
+      isLogin: false,
+    };
   }
   try {
     const token = tokens.token;
     const defaultHeaders = {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
     const reqHeaders: headersProps = {
       ...defaultHeaders,
-      ...headers
-    }
+      ...headers,
+    };
     const requestdata: reqDataProps = {
       method: method,
-      headers: reqHeaders
-    }
+      headers: reqHeaders,
+    };
     if (body) {
       requestdata.body = body;
     }
     // console.log(requestdata)
-    const req = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/${path}`, requestdata as RequestInit);
+    const req = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/auth/${path}`,
+      requestdata as RequestInit
+    );
 
     // if (!req.ok) {
     //   return { error: "can't fetch", isLogin: true, ...req }
@@ -74,7 +82,7 @@ const fetchToken = async ({ path, method = 'GET', headers, body }: fetchTokenPro
   } catch (error) {
     throw new Error(`Error fetching auth session: ${error}`);
   }
-}
+};
 
 // const useAuth = () => {
 //   const [loginUser, setLoginUser] = useState({
@@ -156,27 +164,27 @@ export const getAuthSession = async ({ id }: { id?: string } = { id: undefined }
   //   email: "hogehoge@huga.nya"
   // }
   // return(dummy)
-  const session = await getToken()
+  const session = await getToken();
   if (!session.ok) {
     return null;
   }
   const user = await fetchToken({
-    path: 'me'
-  })
+    path: 'me',
+  });
   if (!user.ok) {
-    console.error("Failed to fetch user data");
+    console.error('Failed to fetch user data');
     throw new Error(`HTTP error! status: ${JSON.stringify(user)}`);
   }
   if (id && user.id !== id) {
-    console.warn(`User ID mismatch: expected ${id}, get ${user.id}`)
-    return null
+    console.warn(`User ID mismatch: expected ${id}, get ${user.id}`);
+    return null;
   }
   const returnData: ReturnDataProps = {
-    "id": user.id as string,
-    "name": user.name as string,
-    "nickname": user.nickname as string,
-    "email": user.email as string,
+    id: user.id as string,
+    name: user.name as string,
+    nickname: user.nickname as string,
+    email: user.email as string,
     // "role": user.role as string
-  }
+  };
   return returnData;
-}
+};
