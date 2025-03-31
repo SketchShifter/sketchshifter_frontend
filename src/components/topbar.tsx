@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 const TopBar = () => {
   const [session, setSession] = useState<ReturnDataProps>(null);
   const [humOpen, setHumOpen] = useState(false);
+
   const router = useRouter();
   useEffect(() => {
     setHumOpen(false);

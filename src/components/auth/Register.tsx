@@ -69,9 +69,9 @@ const Register = () => {
       const responce = await res.json();
       const token = responce.token;
       localStorage.setItem('token', token);
+      await router.refresh();
       await router.push('/');
-      window.location.reload();
-      router.refresh();
+      await router.refresh();
     } catch (error) {
       console.log(error);
       return error;
