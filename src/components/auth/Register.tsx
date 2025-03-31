@@ -70,7 +70,7 @@ const Register = () => {
       const token = responce.token;
       localStorage.setItem('token', token);
       await router.refresh();
-      await router.push('/');
+      await router.push('/login');
       await router.refresh();
     } catch (error) {
       console.log(error);
