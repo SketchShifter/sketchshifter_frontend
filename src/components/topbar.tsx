@@ -120,7 +120,7 @@ const TopBar = () => {
           {session ? (
             <>
               <Button title="投稿" props={{ href: '/mylist/submit' }} />
-              <Button title="プレビュー" props={{ href: '/post' }} />
+              <Button title="プレビュー" props={{ href: '/preview' }} />
               <Button title="作品一覧" props={{ href: '/artworks' }} />
               <Button title="マイリスト" props={{ href: '/mylist' }} />
               <button
@@ -136,9 +136,8 @@ const TopBar = () => {
             </>
           ) : (
             <>
-              <Button title="ゲスト投稿" props={{ href: '/post' }} />
+              <Button title="プレビュー" props={{ href: '/preview' }} />
               <Button title="作品一覧" props={{ href: '/artworks' }} />
-              <Button title="ゲストプレビュー" props={{ href: '/preview' }} />
               <Button title="ログイン" props={{ href: '/login' }} />
               <Button title="アカウント登録" props={{ href: '/register' }} />
               {/* <p className="text-white">ゲスト さん</p> */}
