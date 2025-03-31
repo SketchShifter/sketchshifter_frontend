@@ -314,7 +314,7 @@ export default function SubmitWorkPage() {
               ref={fileInputRef}
               onChange={handleFileChange}
               className="hidden"
-              accept=".pde,.jpg,.jpeg,.png,.gif,.webp"
+              accept=".pde"
             />
 
             <div
@@ -369,7 +369,7 @@ export default function SubmitWorkPage() {
                   <p className="mb-1 text-sm font-medium text-gray-900">
                     クリックしてファイルを選択
                   </p>
-                  <p className="text-xs text-gray-500">PDE, PNG, JPG, GIF, WEBP</p>
+                  <p className="text-xs text-gray-500">PDE</p>
                   <p className="text-xs text-gray-500">最大 50MB</p>
                 </div>
               )}

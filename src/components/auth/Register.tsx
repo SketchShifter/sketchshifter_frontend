@@ -1,10 +1,10 @@
 'use client';
 
-import { getAuthSession } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-
+import { redirect } from 'next/navigation';
+import { toast } from 'react-toastify';
 interface InputType {
   email: string;
   password: string;
@@ -29,11 +29,10 @@ const Register = () => {
 
   useEffect(() => {
     const checkAuthSession = async () => {
-      const user = await getAuthSession();
-      if (user) {
-        await router.push('/');
-        window.location.reload();
-        router.refresh();
+      const token = localStorage.getItem('token');
+      if (token) {
+        toast.success('ログインしました');
+        redirect('/');
       }
     };
 
@@ -69,9 +68,10 @@ const Register = () => {
       const responce = await res.json();
       const token = responce.token;
       localStorage.setItem('token', token);
-      await router.refresh();
-      await router.push('/login');
-      await router.refresh();
+
+      await router.push('/');
+      await window.location.reload();
+      router.refresh();
     } catch (error) {
       console.log(error);
       return error;

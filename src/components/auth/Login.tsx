@@ -1,9 +1,9 @@
 'use client';
 
-import { getAuthSession } from '@/lib/auth';
 import { redirect, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm, FieldErrors } from 'react-hook-form';
+import { toast } from 'react-toastify';
 interface InputType {
   email: string;
   password: string;
@@ -24,8 +24,9 @@ const Login = () => {
 
   useEffect(() => {
     const checkAuthSession = async () => {
-      const user = await getAuthSession();
-      if (user) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        toast.success('ログインしました');
         redirect('/');
       }
     };
