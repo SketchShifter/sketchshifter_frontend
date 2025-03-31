@@ -118,7 +118,7 @@ const Top = () => {
   return (
     <>
       <Tile img="/1037680.jpg" imgAlt="" width={200} height={100} delay={0.2}>
-        <TileChild btn="投稿する" link="/post">
+        <TileChild btn="投稿する" link="/preview">
           <p className="text-sm sm:text-xl md:text-2xl">あなたの作品を 世界中に広げよう</p>
         </TileChild>
       </Tile>
