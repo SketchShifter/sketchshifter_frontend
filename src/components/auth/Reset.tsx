@@ -1,156 +1,163 @@
 'use client';
 
-import { getAuthSession } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useForm, FieldErrors } from "react-hook-form";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import Link from 'next/link';
+import { toast } from 'react-toastify';
 
-const redirectTo = ""
-
-interface InputType {
-    passwordNow: string;
-    password: string;
-    passwordRe: string;
-}
-const Reset = () => {
-    const [loading, setLoading] = useState(false);
-
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        getValues
-    } = useForm<InputType>({
-        mode: 'onBlur'
-    });
-    useEffect(() => {
-        const checkAuthSession = async () => {
-            const user = await getAuthSession();
-            // ログインしてたらリダイレクトする
-            if (user){
-                redirect(`${redirectTo}/${user.id}`);
-            }
-        };
-
-        checkAuthSession();
-    },[])
-
-    // ログインに失敗したときの処理
-    const loginFailed = (error: Response) => {
-        console.error(error);
-        return ""
-    }
-
-    // ログインに成功したときの処理
-    const loginSuccess = (user_id: string) => {
-        redirect(`${redirectTo}/${user_id}`);
-    }
-
-    const loginReq = async (data: InputType) => {
-        try {
-            if(data.password !== data.passwordRe){
-                throw Error
-            }
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`,{
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            if(!res.ok) {
-                loginFailed(res);
-                throw new Error(`レスポンスステータス: ${res.status}`)
-            }
-            const responce = await res.json()
-            const token = responce.token
-            const user = responce.user
-            localStorage.setItem("token",token);
-            loginSuccess(user.id);
-        }catch(error){
-            console.error(error);   
-            if (error instanceof Response) {
-                loginFailed(error);
-            }
-            return error;
-        }
-    }
-
-    const isValid = (data: InputType) => {
-        alert(`password is ${data.password}`);
-        setLoading(true);
-        loginReq(data);
-    };
-
-    const isInValid = (error: FieldErrors<InputType>) => {
-        console.error(error);
-    };
-
-
-    return(<>
-        <form onSubmit={handleSubmit(isValid, isInValid)} className="max-w-xs center mx-auto flex flex-nowrap flex-col items-center">
-            <div className="w-full flex flex-nowrap flex-col p-1">
-                <label htmlFor="passwordNow">
-                    現在のパスワード
-                </label>
-                <input
-                    {...register("passwordNow", {
-                        required: "現在のパスワードを入力してください",
-                        minLength: { value: 8, message: "8文字以上入力してください"}
-                    })}
-                    className="border-2 border-solid rounded-sm"
-                    type="password"
-                    name="passwordNow"
-                />
-                <div className="text-[red] text-xs h-4">
-                    {errors.passwordNow?.message}
-                </div>
-            </div>
-            <div className="w-full flex flex-nowrap flex-col p-1">
-                <label htmlFor="password">
-                    新しいパスワード
-                </label>
-                <input
-                    {...register("password", {
-                        required: "新しいパスワードを入力してください",
-                        minLength: { value: 8, message: "8文字以上入力してください"}
-                    })}
-                    className="border-2 border-solid rounded-sm"
-                    type="password"
-                    name="password"
-                />
-                <div className="text-[red] text-xs h-4">
-                    {errors.password?.message}
-                </div>
-            </div>
-            <div className="w-full flex flex-nowrap flex-col p-1">
-                <label htmlFor="passwordRe">
-                    新しいパスワードを再入力
-                </label>
-                <input
-                    {...register("passwordRe", {
-                        required: "新しいパスワードを再入力してください",
-                        minLength: { value: 8, message: "8文字以上入力してください"},
-                        validate: {
-                            matchesPreviousPassword: (value) => {
-                                const { password } = getValues();
-                                return password === value || "パスワードが一致しません";
-                            }
-                        }
-                    })}
-                    className="border-2 border-solid rounded-sm"
-                    type="password"
-                    name="passwordRe"
-                />
-                <div className="text-[red] text-xs h-4">
-                    {errors.passwordRe?.message}
-                </div>
-            </div>
-            <div className={`px-4 py-2 w-fit rounded-full ${loading ? 'bg-gray-500' : 'bg-black'} text-white`}>
-                <input type="submit" value="パスワードを変更" disabled={loading} />
-            </div>
-        </form>
-    </>);
+interface PasswordResetFormData {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
-export {Reset}
+export default function Reset() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    getValues,
+  } = useForm<PasswordResetFormData>({
+    mode: 'onBlur',
+  });
+
+  const onSubmit = async (data: PasswordResetFormData) => {
+    if (data.newPassword !== data.confirmPassword) {
+      toast.error('新しいパスワードが一致しません');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        toast.error('認証が必要です。ログインしてください');
+        router.push('/login');
+        return;
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          current_password: data.currentPassword,
+          new_password: data.newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'パスワードの変更に失敗しました');
+      }
+
+      toast.success('パスワードが正常に変更されました');
+      // 成功したらマイページなどに遷移
+      router.push('/mylist');
+    } catch (error) {
+      console.error('パスワード変更エラー:', error);
+      toast.error(error instanceof Error ? error.message : 'パスワードの変更に失敗しました');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="mx-auto max-w-md">
+        <h1 className="mb-6 text-2xl font-bold text-gray-900">パスワード変更</h1>
+
+        <div className="rounded-lg bg-white p-6 shadow-md">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div>
+              <label
+                htmlFor="currentPassword"
+                className="mb-1 block text-sm font-medium text-gray-700"
+              >
+                現在のパスワード <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                id="currentPassword"
+                {...register('currentPassword', {
+                  required: '現在のパスワードを入力してください',
+                  minLength: { value: 6, message: '6文字以上入力してください' },
+                })}
+                className="block w-full rounded-md border border-gray-300 p-2.5 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              />
+              {errors.currentPassword && (
+                <p className="mt-1 text-sm text-red-600">{errors.currentPassword.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="newPassword" className="mb-1 block text-sm font-medium text-gray-700">
+                新しいパスワード <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                id="newPassword"
+                {...register('newPassword', {
+                  required: '新しいパスワードを入力してください',
+                  minLength: { value: 6, message: '6文字以上入力してください' },
+                })}
+                className="block w-full rounded-md border border-gray-300 p-2.5 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              />
+              {errors.newPassword && (
+                <p className="mt-1 text-sm text-red-600">{errors.newPassword.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor="confirmPassword"
+                className="mb-1 block text-sm font-medium text-gray-700"
+              >
+                新しいパスワードを確認 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                {...register('confirmPassword', {
+                  required: '新しいパスワードを再入力してください',
+                  validate: (value) =>
+                    value === getValues('newPassword') || 'パスワードが一致しません',
+                })}
+                className="block w-full rounded-md border border-gray-300 p-2.5 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              />
+              {errors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
+              )}
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`w-full rounded-md px-4 py-2 text-white ${
+                  isSubmitting ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'
+                }`}
+              >
+                {isSubmitting ? '処理中...' : 'パスワードを変更する'}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div className="mt-4 text-center text-sm">
+          <Link href="/mylist" className="text-indigo-600 hover:underline">
+            マイページに戻る
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

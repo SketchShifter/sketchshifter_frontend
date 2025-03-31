@@ -119,7 +119,8 @@ const TopBar = () => {
         <div className="flex flex-col space-x-4 md:flex-row md:flex-nowrap">
           {session ? (
             <>
-              <Button title="投稿" props={{ href: '/post' }} />
+              <Button title="投稿" props={{ href: '/mylist/submit' }} />
+              <Button title="プレビュー" props={{ href: '/post' }} />
               <Button title="作品一覧" props={{ href: '/artworks' }} />
               <Button title="マイリスト" props={{ href: '/mylist' }} />
               <button
@@ -135,7 +136,7 @@ const TopBar = () => {
             </>
           ) : (
             <>
-              <Button title="投稿" props={{ href: '/post' }} />
+              <Button title="ゲスト投稿" props={{ href: '/post' }} />
               <Button title="作品一覧" props={{ href: '/artworks' }} />
               <Button title="ゲストプレビュー" props={{ href: '/preview' }} />
               <Button title="ログイン" props={{ href: '/login' }} />

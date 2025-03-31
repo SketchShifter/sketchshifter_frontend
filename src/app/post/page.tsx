@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, ChangeEvent, FormEvent } from 'react';
 import { setupProcessingEnvironment } from '../../../public/processingEmulator';
-import { useRouter } from 'next/navigation';
+
 // ファイルアップロード用の型定義
 interface FileInputEvent extends ChangeEvent<HTMLInputElement> {
   target: HTMLInputElement & {
@@ -42,25 +42,6 @@ export default function PreviewPage() {
       window.removeEventListener('error', handleProcessingError);
     };
   }, []);
-
-  const [token, setToken] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  const router = useRouter();
-
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    setToken(storedToken);
-    setIsInitialized(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    if (token) {
-      router.push('/mylist/submit');
-    }
-  }, [token, router, isInitialized]);
 
   // ファイルのアップロードハンドラー
   const handleFileChange = (e: FileInputEvent) => {
