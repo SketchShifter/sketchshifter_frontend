@@ -4,8 +4,8 @@
 
 ```bash
 # リポジトリのクローン
-git clone https://github.com/SketchShifter/sketchshifter_front.git
-cd SketchShifter/sketchshifter_front.git
+git clone https://github.com/SketchShifter/sketchshifter_frontend.git
+cd SketchShifter/sketchshifter_frontend.git
 
 # 依存パッケージのインストール
 npm install
@@ -38,8 +38,8 @@ git pull --rebase origin main
 
 ```bash
 # リポジトリのクローン
-git clone https://github.com/SketchShifter/sketchshifter_front.git
-cd SketchShifter/sketchshifter_front.git
+git clone https://github.com/SketchShifter/sketchshifter_frontend.git
+cd SketchShifter/sketchshifter_frontend.git
 
 # 依存パッケージのインストール
 npm install
