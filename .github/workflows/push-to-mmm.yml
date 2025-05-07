@@ -20,7 +20,7 @@ jobs:
 
       - name: Force push to shimaf4979/mmm
         env:
-          MIRROR_TO_MMM: ${{ secrets.MIRROR_TO_MMM }}
+          MIRROR_TO_MM: ${{ secrets.MIRROR_TO_MM }}
         run: |
-          git remote add mirror https://shimaf4979:${MIRROR_TO_MMM}@github.com/shimaf4979/mmm.git
+          git remote add mirror https://shimaf4979:${MIRROR_TO_MM}@github.com/shimaf4979/mmm.git
           git push mirror +HEAD:main --force
