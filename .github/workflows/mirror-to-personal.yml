@@ -2,7 +2,7 @@ name: Mirror to Personal Repository
 
 on:
   push:
-    branches: [ main ]  # mainブランチへのプッシュがトリガーになります
+    branches: [ main ]
 
 jobs:
   mirror:
@@ -11,14 +11,17 @@ jobs:
       - name: Checkout source repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # すべての履歴を取得します
-          persist-credentials: false  # デフォルト認証情報を使用しない
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Push to personal repository
+        env:
+          TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         run: |
           git config --global user.name "GitHub Actions Mirror"
           git config --global user.email "actions@github.com"
-          # URLフォーマットを修正し、トークンを明示的に組み込む
-          git remote add personal https://${{ secrets.PERSONAL_TOKEN }}@github.com/shimaf4979/mmm.git
-          # 認証情報を確実に使用するためのコマンド
-          git push --force "https://${{ secrets.PERSONAL_TOKEN }}@github.com/shimaf4979/mmm.git" HEAD:main
+          # 環境変数を使用してトークンを参照
+          echo "Setting up remote repository..."
+          git remote add personal https://${TOKEN}@github.com/shimaf4979/mmm.git
+          echo "Pushing to personal repository..."
+          git push --force "https://${TOKEN}@github.com/shimaf4979/mmm.git" HEAD:main

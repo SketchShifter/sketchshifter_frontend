@@ -256,7 +256,7 @@ export default function PDEPage() {
               id="compileBtn"
               className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
             >
-              コンパイル＆実行
+              コンパイル＆実行を実行
             </button>
             <button
               id="showDebugBtn"
