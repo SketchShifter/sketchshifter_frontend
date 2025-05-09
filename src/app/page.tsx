@@ -33,12 +33,7 @@ export default function HomePage() {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
       <Top />
-      <motion.div
-        className="mt-4"
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 1.4, duration: 0.3 }}
-      >
+      <div className="mt-4">
         {isLoading ? (
           <div className="flex justify-center p-12">
             <div className="h-12 w-12 animate-spin rounded-full border-t-2 border-b-2 border-indigo-500"></div>
@@ -46,7 +41,7 @@ export default function HomePage() {
         ) : (
           <HomeGallery data={data} />
         )}
-      </motion.div>
+      </div>
     </motion.div>
   );
 }
