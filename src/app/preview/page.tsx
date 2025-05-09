@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, ChangeEvent, FormEvent } from 'react';
 import Script from 'next/script';
-import { setupCanvasUtils, compileAndRun, fullCanvasReset } from '@/lib/processing-utils';
+import { setupCanvasUtils, previewProcessingCode } from '@/lib/processing-utils';
 
 // ファイルアップロード用の型定義
 interface FileInputEvent extends ChangeEvent<HTMLInputElement> {
@@ -36,6 +36,15 @@ export default function PreviewPage() {
     // イベントリスナーを登録
     window.addEventListener('error', handleProcessingError);
 
+    // スクリプトがすでに読み込まれている場合（例：ホットリロード時）
+    if (window.resetCanvas && !isScriptLoaded) {
+      setIsScriptLoaded(true);
+      setupCanvasUtils((message) => {
+        console.log(message);
+      });
+      window.resetCanvas();
+    }
+
     return () => {
       window.removeEventListener('error', handleProcessingError);
     };
@@ -48,6 +57,11 @@ export default function PreviewPage() {
     setupCanvasUtils((message) => {
       console.log(message);
     });
+
+    // スクリプトが読み込まれたら、すぐにキャンバスを初期化
+    if (window.resetCanvas) {
+      window.resetCanvas();
+    }
   };
 
   // ファイルのアップロードハンドラー
@@ -94,53 +108,15 @@ export default function PreviewPage() {
 
   // PDEの直接プレビュー
   const executePreview = () => {
-    try {
-      setIsProcessing(true);
-      setError(null);
-      setSuccess(null);
-
-      if (!isScriptLoaded) {
-        setError('スクリプトがまだ読み込まれていません。少々お待ちください。');
-        return;
-      }
-
-      if (!pdeCode) {
-        setError('PDEコードがありません');
-        return;
-      }
-
-      // キャンバスをクリーンアップ
-      fullCanvasReset((message) => {
-        console.log(message);
-      }, setCanvasKey);
-
-      // コンパイルと実行を行う
-      compileAndRun(
-        pdeCode,
-        isScriptLoaded,
-        (message) => {
-          console.log(message);
-          // エラーが含まれているかチェック
-          if (message.includes('エラー')) {
-            setError(message);
-          }
-        },
-        setJsCode,
-        () => {}, // デバッグ表示は不要なので空の関数
-        setCanvasKey
-      );
-
-      setSuccess('プレビューを実行しました');
-    } catch (error) {
-      console.error('プレビュー実行エラー:', error);
-      if (error instanceof Error) {
-        setError(`エラーが発生しました: ${error.message}`);
-      } else {
-        setError('予期せぬエラーが発生しました');
-      }
-    } finally {
-      setIsProcessing(false);
-    }
+    previewProcessingCode(
+      pdeCode,
+      isScriptLoaded,
+      setError,
+      setSuccess,
+      setIsProcessing,
+      setJsCode,
+      setCanvasKey
+    );
   };
 
   // クリーンアップ

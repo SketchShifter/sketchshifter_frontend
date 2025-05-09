@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, ChangeEvent, FormEvent } from 'react';
-import { setupCanvasUtils, compileAndRun, fullCanvasReset } from '@/lib/processing-utils';
+import { setupCanvasUtils, previewProcessingCode } from '@/lib/processing-utils';
 
 // ファイルアップロード用の型定義
 interface FileInputEvent extends ChangeEvent<HTMLInputElement> {
@@ -114,49 +114,16 @@ export default function ProcessingCanvas({ canvasKey, logMessage }: ProcessingCa
 
   // PDEコードのプレビュー
   const executePreview = () => {
-    try {
-      setIsProcessing(true);
-      setError(null);
-      setSuccess(null);
-
-      // 既存のアニメーションをクリーンアップ
-      if (window.animationFrameId !== undefined) {
-        cancelAnimationFrame(window.animationFrameId);
-        window.animationFrameId = undefined;
-      }
-
-      // キャンバスを完全に初期化
-      fullCanvasReset(logMessage, () => {});
-
-      if (!isScriptLoaded) {
-        setError('スクリプトがまだ読み込まれていません。少し待ってから再試行してください。');
-        setIsProcessing(false);
-        return;
-      }
-
-      // PDEコードのコンパイルと実行
-      compileAndRun(
-        pdeCode,
-        isScriptLoaded,
-        logMessage,
-        setJsOutput,
-        (show) => {
-          setShowConvertedCode(show);
-        },
-        () => {}
-      );
-
-      setSuccess('プレビューを実行しました');
-    } catch (error) {
-      console.error('プレビュー実行エラー:', error);
-      if (error instanceof Error) {
-        setError(`エラーが発生しました: ${error.message}`);
-      } else {
-        setError('予期せぬエラーが発生しました');
-      }
-    } finally {
-      setIsProcessing(false);
-    }
+    previewProcessingCode(
+      pdeCode,
+      isScriptLoaded,
+      setError,
+      setSuccess,
+      setIsProcessing,
+      setJsOutput,
+      // ダミーのsetCanvasKey関数を渡す（このコンポーネントではcanvasKeyは外部から管理される）
+      () => {}
+    );
   };
 
   // JSコードの設定関数（コールバック用）

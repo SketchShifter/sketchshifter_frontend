@@ -1,8 +1,10 @@
+// artworks/[id]/page.tsx
+
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import Script from 'next/script';
 import {
   HeartIcon,
   EyeIcon,
@@ -10,258 +12,199 @@ import {
   ClockIcon,
   UserIcon,
   ArrowDownTrayIcon,
+  PlayIcon,
+  ChevronUpIcon,
+  CodeBracketIcon,
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { toast } from 'react-toastify';
-import { setupProcessingEnvironment } from '../../../../public/processingEmulator';
 import { formatDate } from '@/lib/formatDate';
-import { useParams } from 'next/navigation';
-// 型定義
-interface ProcessingWork {
-  id: number;
-  canvas_id: string;
-  js_content: string;
-  status: string;
-  error_message: string;
-  original_name: string;
-  pde_content: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface User {
-  id: number;
-  name: string;
-  nickname: string;
-}
-
-interface Work {
-  id: number;
-  title: string;
-  description: string;
-  file_type: string;
-  file_url: string;
-  thumbnail_url: string | null;
-  code_shared: boolean;
-  code_content: string;
-  views: number;
-  created_at: string;
-  user: User | null;
-  tags: { id: number; name: string }[];
-  likes_count: number;
-  comments_count: number;
-  processing_work?: ProcessingWork;
-}
-
-interface Comment {
-  id: number;
-  content: string;
-  user: User | null;
-  guest_nickname: string | null;
-  is_guest: boolean;
-  created_at: string;
-}
+import { setupCanvasUtils, compileAndRun } from '@/lib/processing-utils';
+import { useParams, useRouter } from 'next/navigation';
+import {
+  useWork,
+  useComments,
+  useLikeStatus,
+  useLikeToggle,
+  useAddComment,
+} from '@/hooks/use-work';
+import { useCurrentUser } from '@/hooks/use-auth';
 
 export default function ArtworkDetailPage() {
   const params = useParams();
-  const id = params.id;
-  const [work, setWork] = useState<Work | null>(null);
-  const [processingWork, setProcessingWork] = useState<ProcessingWork | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const id = params.id as string;
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [liked, setLiked] = useState(false);
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [success, setSuccess] = useState<string | null>(null);
   const [isCodeVisible, setIsCodeVisible] = useState(true);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [isScriptLoaded, setIsScriptLoaded] = useState<boolean>(false);
+  const [canvasKey, setCanvasKey] = useState<number>(0);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [jsCode, setJsCode] = useState<string>('');
+  const [showJsCode, setShowJsCode] = useState<boolean>(false);
+  const [isPreviewActive, setIsPreviewActive] = useState<boolean>(false);
+  const [commentText, setCommentText] = useState<string>('');
+  const [guestNickname, setGuestNickname] = useState<string>('');
 
-  // Canvas描画用
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  // API URLの設定
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.serendicode-sub.click';
 
-  // 作品データの取得
-  useEffect(() => {
-    const fetchWork = async () => {
-      setIsLoading(true);
-      setError(null);
+  // 認証状態と現在のユーザー情報を取得
+  const { isAuthenticated } = useCurrentUser();
 
-      try {
-        let token = null;
-        try {
-          token = localStorage.getItem('token');
-        } catch (e) {
-          console.log('no token', e);
-        }
+  // データ取得のためのクエリ
+  const { data: workData, isLoading, isError } = useWork(id);
+  const { data: comments = [] } = useComments(id);
+  const { data: likeStatus } = useLikeStatus(id);
+  const likeMutation = useLikeToggle();
+  const commentMutation = useAddComment();
 
-        const response = await fetch(`${API_BASE_URL}/works/${id}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+  const work = workData?.work;
+  const processingWork = workData?.processingWork;
+  const liked = likeStatus?.liked || false;
 
-        if (!response.ok) {
-          throw new Error('作品データの取得に失敗しました');
-        }
+  // スクリプトの読み込み完了ハンドラー
+  const handleScriptLoad = () => {
+    console.log('スクリプトが読み込まれました');
+    setIsScriptLoaded(true);
+    setupCanvasUtils((message) => console.log(message));
 
-        const data = await response.json();
-        console.log('取得した作品データ:', data);
-
-        // APIから返された作品データを設定
-        setWork(data.work || data);
-
-        // APIから返されたProcessing作品データを設定
-        if (data.processing_work) {
-          setProcessingWork(data.processing_work);
-        } else if (data.work && data.work.processing_work) {
-          setProcessingWork(data.work.processing_work);
-        }
-
-        // ユーザーがログインしている場合、いいね状態を確認
-        if (token) {
-          checkLikeStatus(data.work?.id || data.id);
-        }
-
-        // コメント取得
-        fetchComments(data.work?.id || data.id);
-      } catch (error) {
-        console.error('エラー:', error);
-        setError('作品データの取得中にエラーが発生しました');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchWork();
-    }
-  }, [id, API_BASE_URL]);
-
-  // Canvas描画を実行するuseEffect
-  useEffect(() => {
-    let cleanup = () => {};
-
-    if (processingWork?.status === 'processed' && canvasRef.current) {
-      console.log('Processingでの描画を開始します');
-
-      // デフォルトサイズの設定
-      if (canvasRef.current) {
-        canvasRef.current.width = 400;
-        canvasRef.current.height = 400;
-      }
-
-      // JSコンテンツがあれば実行
-      console.log('processingWork.js_content:', processingWork.js_content);
-      if (processingWork.js_content) {
-        // コードを修正して不正な変数宣言を修正
-        const fixedJsContent = processingWork.js_content
-          .replace(/let\s+([a-zA-Z0-9_]+)\s*=\s*;/g, 'let $1;')
-          .replace(/var\s+([a-zA-Z0-9_]+)\s*=\s*;/g, 'var $1;')
-          .replace(/const\s+([a-zA-Z0-9_]+)\s*=\s*;/g, 'const $1;');
-
-        // 修正したコードを出力（デバッグ用）
-        console.log('修正後のコード:', fixedJsContent);
-
-        cleanup = setupProcessingEnvironment(canvasRef.current, fixedJsContent);
-      } else {
-        // JSコンテンツがなければエラーメッセージを表示
-        const ctx = canvasRef.current.getContext('2d');
-        if (ctx) {
-          ctx.fillStyle = 'white';
-          ctx.fillRect(0, 0, 400, 400);
-          ctx.fillStyle = 'red';
-          ctx.font = '14px sans-serif';
-          ctx.fillText('JavaScriptコードがありません', 10, 30);
-        }
-      }
-    }
-
-    // クリーンアップ関数
-    return () => {
-      cleanup();
-    };
-  }, [processingWork]);
+    // スクリプトが読み込まれたら、すぐにキャンバスを初期化
+    if (window.resetCanvas) window.resetCanvas();
+  };
 
   // スクロールイベントを監視
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 300) {
-        setShowScrollToTop(true);
-      } else {
-        setShowScrollToTop(false);
-      }
-    };
-
+    const handleScroll = () => setShowScrollToTop(window.scrollY > 300);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // いいね状態の確認
-  const checkLikeStatus = async (workId: number) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
+  // クリーンアップとスクリプト初期化
+  useEffect(() => {
+    // エラー処理用
+    const handleProcessingError = (event: ErrorEvent) => {
+      console.error('Processing error caught:', event.error);
+      setError(`Processing実行エラー: ${event.error}`);
+    };
 
-      const response = await fetch(`${API_BASE_URL}/works/${workId}/liked`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log('いいね状態の確認:', response);
+    window.addEventListener('error', handleProcessingError);
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('いいね状態の確認:', data.liked);
-        setLiked(data.liked);
-      }
-      console.log('いいね状態の確認:', liked);
-    } catch (error) {
-      console.error('いいね状態の確認中にエラー:', error);
+    // スクリプトがすでに読み込まれている場合（例：ホットリロード時）
+    if (window.resetCanvas && !isScriptLoaded) {
+      setIsScriptLoaded(true);
+      setupCanvasUtils((message) => console.log(message));
+      window.resetCanvas();
     }
-  };
 
-  // コメントの取得
-  const fetchComments = async (workId: number) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/works/${workId}/comments`);
-      if (response.ok) {
-        const data = await response.json();
-        setComments(data.comments || []);
-      }
-    } catch (error) {
-      console.error('コメントの取得中にエラー:', error);
-    }
-  };
+    return () => {
+      // アニメーションループを停止
+      if (window.animationFrameId !== undefined) cancelAnimationFrame(window.animationFrameId);
+      window.removeEventListener('error', handleProcessingError);
+    };
+  }, [isScriptLoaded]);
 
   // いいねの切り替え
   const toggleLike = async () => {
+    // 認証状態をチェック - TanStack Queryと連携して確実に判定
+    if (!isAuthenticated) {
+      toast.error('ログインが必要です。');
+      // ログインページへリダイレクト
+      router.push('/login?redirect=' + encodeURIComponent(`/artworks/${id}`));
+      return;
+    }
+
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('ログインが必要です。');
-        return;
-      }
-
-      const url = `${API_BASE_URL}/works/${work?.id}/${liked ? 'unlike' : 'like'}`;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setLiked(!liked);
-        // 作品データを更新（いいね数を反映）
-        setWork((prev) => (prev ? { ...prev, likes_count: data.likes_count } : null));
-        toast.success(liked ? 'いいねを取り消しました' : 'いいねを押しました！');
-      } else {
-        const errorData = await response.json();
-        toast.error(`エラー: ${errorData.message || 'いいね処理に失敗しました。'}`);
-      }
+      await likeMutation.mutateAsync({ workId: id, liked });
+      toast.success(liked ? 'いいねを取り消しました' : 'いいねを押しました！');
     } catch (error) {
-      console.error('いいね処理中にエラー:', error);
-      toast.error('サーバーに接続できませんでした。');
+      if (error instanceof Error) {
+        toast.error(`エラー: ${error.message}`);
+      } else {
+        toast.error('サーバーに接続できませんでした。');
+      }
     }
   };
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Processingコードを実行
+  const executeProcessingCode = () => {
+    if (!processingWork || !processingWork.pde_content) {
+      setError('PDEコードがありません');
+      return;
+    }
+
+    setIsProcessing(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      // コンパイルと実行を行う
+      compileAndRun(
+        processingWork.pde_content,
+        isScriptLoaded,
+        (message) => {
+          console.log(message);
+          // エラーが含まれているかチェック
+          if (message.includes('エラー')) setError(message);
+        },
+        setJsCode,
+        () => {}, // デバッグ表示は不要なので空の関数
+        setCanvasKey
+      );
+
+      setSuccess('プレビューを実行しました');
+      setIsPreviewActive(true);
+    } catch (error) {
+      console.error('プレビュー実行エラー:', error);
+      if (error instanceof Error) {
+        setError(`エラーが発生しました: ${error.message}`);
+      } else {
+        setError('予期せぬエラーが発生しました');
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // コメント投稿処理
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!commentText.trim()) {
+      toast.error('コメントを入力してください');
+      return;
+    }
+
+    try {
+      // ゲストとしてコメントするか認証ユーザーとしてコメントするかを判断
+      const commentData = isAuthenticated
+        ? { content: commentText }
+        : {
+            content: commentText,
+            is_guest: true,
+            guest_nickname: guestNickname.trim() || 'ゲスト',
+          };
+
+      await commentMutation.mutateAsync({
+        workId: id,
+        commentData,
+      });
+
+      // フォームをリセット
+      setCommentText('');
+      setGuestNickname('');
+
+      toast.success('コメントを投稿しました');
+    } catch (error) {
+      console.error('コメント投稿エラー:', error);
+      if (error instanceof Error) {
+        toast.error(`エラー: ${error.message}`);
+      } else {
+        toast.error('コメントの投稿に失敗しました');
+      }
+    }
   };
 
   if (isLoading) {
@@ -274,7 +217,7 @@ export default function ArtworkDetailPage() {
     );
   }
 
-  if (error || !work) {
+  if (isError || !work) {
     return (
       <div className="container mx-auto px-4 py-12">
         <div className="rounded-lg bg-red-50 p-6 text-center text-red-700">
@@ -292,300 +235,397 @@ export default function ArtworkDetailPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* 作品タイトルと基本情報 */}
-      <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold text-gray-900">{work.title}</h1>
-        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-          <span className="flex items-center">
-            <ClockIcon className="mr-1 h-4 w-4" />
-            {formatDate(work.created_at)}
-          </span>
+    <>
+      <Script
+        src="/scripts/runCode.js"
+        strategy="afterInteractive"
+        onLoad={handleScriptLoad}
+        onError={() => setError('スクリプト読み込みエラー')}
+      />
 
-          <span className="flex items-center">
-            <EyeIcon className="mr-1 h-4 w-4" />
-            {work.views}
-          </span>
+      <div className="container mx-auto px-4 py-8">
+        {/* 作品ヘッダー: タイトル、作者、統計情報 */}
+        <div className="mb-6 rounded-lg bg-white p-6 shadow-md">
+          <h1 className="mb-3 text-3xl font-bold text-gray-900">{work.title}</h1>
 
-          <span className="flex items-center">
-            {liked ? (
-              <HeartIconSolid className="mr-1 h-4 w-4 text-red-500" />
-            ) : (
-              <HeartIcon className="mr-1 h-4 w-4" />
+          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+            {work.user && (
+              <Link
+                href={`/users/${work.user.id}`}
+                className="flex items-center text-blue-600 hover:underline"
+              >
+                <UserIcon className="mr-1 h-4 w-4" />
+                {work.user.nickname}
+              </Link>
             )}
-            {work.likes_count}
-          </span>
 
-          <span className="flex items-center">
-            <ChatBubbleLeftIcon className="mr-1 h-4 w-4" />
-            {work.comments_count}
-          </span>
+            <span className="flex items-center">
+              <ClockIcon className="mr-1 h-4 w-4" />
+              {formatDate(work.created_at)}
+            </span>
 
-          {work.user && (
-            <Link
-              href={`/users/${work.user.id}`}
-              className="flex items-center text-blue-600 hover:underline"
+            <span className="flex items-center">
+              <EyeIcon className="mr-1 h-4 w-4" />
+              {work.views}閲覧
+            </span>
+
+            <button
+              onClick={toggleLike}
+              disabled={likeMutation.isPending}
+              className={`flex items-center rounded-md px-4 py-2 text-sm font-medium ${
+                likeMutation.isPending
+                  ? 'cursor-wait bg-gray-200 text-gray-500'
+                  : liked
+                    ? 'bg-pink-100 text-pink-700 hover:bg-pink-200'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
             >
-              <UserIcon className="mr-1 h-4 w-4" />
-              {work.user.nickname}
+              {liked ? (
+                <HeartIconSolid className="mr-2 h-5 w-5 text-pink-500" />
+              ) : (
+                <HeartIcon className="mr-2 h-5 w-5" />
+              )}
+              {likeMutation.isPending ? '処理中...' : liked ? 'いいね済み' : 'いいね'}
+            </button>
+
+            <Link href="#comments" className="flex items-center hover:text-blue-600">
+              <ChatBubbleLeftIcon className="mr-1 h-4 w-4" />
+              {work.comments_count}
             </Link>
-          )}
-        </div>
-      </div>
-
-      {/* 作品の表示エリア */}
-      <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-5">
-        {/* 左側：作品表示 */}
-        <div className="md:col-span-3">
-          <div className="rounded-lg bg-gray-50 p-4 shadow-sm">
-            {/* Processing作品の場合 */}
-            {processingWork && (
-              <div className="flex aspect-square w-full items-center justify-center rounded bg-white p-2">
-                {processingWork.status === 'processed' ? (
-                  <canvas
-                    ref={canvasRef}
-                    className="border border-gray-200"
-                    width="400"
-                    height="400"
-                  />
-                ) : (
-                  <div className="text-center text-gray-500">
-                    <div className="mb-2 animate-spin text-4xl">⚙️</div>
-                    <p>
-                      {processingWork.status === 'error'
-                        ? `エラーが発生しました: ${processingWork.error_message}`
-                        : '処理中...'}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* 画像作品の場合 */}
-            {!processingWork && work.file_type?.startsWith('image/') && (
-              <div className="relative aspect-square w-full">
-                <Image
-                  src={work.file_url || work.thumbnail_url || `/api/works/${work.id}/file`}
-                  alt={work.title}
-                  fill
-                  className="rounded object-contain"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 50vw"
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* 右側：情報表示 */}
-        <div className="md:col-span-2">
-          {/* 説明文 */}
-          <div className="mb-6 rounded-lg bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-medium text-gray-900">説明</h2>
-            <div className="whitespace-pre-wrap text-gray-700">
-              {work.description || '説明なし'}
-            </div>
           </div>
 
           {/* タグ */}
           {work.tags && work.tags.length > 0 && (
-            <div className="mb-6 rounded-lg bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-lg font-medium text-gray-900">タグ</h2>
-              <div className="flex flex-wrap gap-2">
-                {work.tags.map((tag) => (
-                  <Link
-                    key={tag.id}
-                    href={`/?tag=${tag.name}`}
-                    className="rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-600 hover:bg-blue-100"
-                  >
-                    {tag.name}
-                  </Link>
-                ))}
-              </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {work.tags.map((tag) => (
+                <Link
+                  key={tag.id}
+                  href={`/?tag=${tag.name}`}
+                  className="rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-600 hover:bg-blue-100"
+                >
+                  {tag.name}
+                </Link>
+              ))}
             </div>
           )}
 
-          {/* アクション */}
-          <div className="mb-6 flex flex-wrap gap-3">
-            <button
-              onClick={toggleLike}
-              className={`flex items-center rounded-md px-4 py-2 text-sm font-medium shadow-sm transition ${
-                liked
-                  ? 'bg-pink-500 text-white hover:bg-pink-600'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              {liked ? (
-                <HeartIconSolid className="mr-2 h-5 w-5" />
-              ) : (
-                <HeartIcon className="mr-2 h-5 w-5" />
-              )}
-              {liked ? 'いいね済み' : 'いいね'}
-            </button>
-
-            <a
-              href={`${API_BASE_URL}/works/${work.id}/file`}
-              download={work.title}
-              className="flex items-center rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-            >
-              <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
-              ダウンロード
-            </a>
-          </div>
-
-          {/* Processing作品のPDEコード */}
-          {processingWork && processingWork.pde_content && (
-            <div className="mb-6 rounded-lg bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-lg font-medium text-gray-900">PDEソースコード</h2>
-              <div className="relative">
-                <button
-                  onClick={() => setIsCodeVisible(!isCodeVisible)}
-                  className="mb-2 rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-                >
-                  {isCodeVisible ? 'コードを隠す' : 'コードを表示'}
-                </button>
-                {isCodeVisible && (
-                  <pre className="max-h-96 overflow-auto rounded bg-gray-900 p-4 text-sm text-gray-100">
-                    <code>{processingWork.pde_content}</code>
-                  </pre>
-                )}
-                {isCodeVisible && (
-                  <button
-                    onClick={() => navigator.clipboard.writeText(processingWork.pde_content)}
-                    className="absolute top-2 right-2 rounded bg-gray-700 p-2 text-white hover:bg-gray-600"
-                    title="コピー"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path>
-                      <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"></path>
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* コードが共有されている場合に表示 */}
-          {work.code_shared && work.code_content && !processingWork && (
-            <div className="rounded-lg bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-lg font-medium text-gray-900">ソースコード</h2>
-              <div className="relative">
-                <button
-                  onClick={() => setIsCodeVisible(!isCodeVisible)}
-                  className="mb-2 rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-                >
-                  {isCodeVisible ? 'コードを隠す' : 'コードを表示'}
-                </button>
-                {isCodeVisible && (
-                  <pre className="max-h-96 overflow-auto rounded bg-gray-900 p-4 text-sm text-gray-100">
-                    <code>{work.code_content}</code>
-                  </pre>
-                )}
-                {isCodeVisible && (
-                  <button
-                    onClick={() => navigator.clipboard.writeText(work.code_content)}
-                    className="absolute top-2 right-2 rounded bg-gray-700 p-2 text-white hover:bg-gray-600"
-                    title="コピー"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path>
-                      <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"></path>
-                    </svg>
-                  </button>
-                )}
-              </div>
+          {/* 説明 */}
+          {work.description && (
+            <div className="mt-4 border-t border-gray-100 pt-4 text-gray-700">
+              <h2 className="mb-2 text-lg font-medium text-gray-900">説明</h2>
+              <div className="whitespace-pre-wrap">{work.description}</div>
             </div>
           )}
         </div>
-      </div>
 
-      {/* コメントセクション */}
-      <div className="mb-8 rounded-lg bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-xl font-medium text-gray-900">コメント ({work.comments_count})</h2>
-
-        {comments.length > 0 ? (
-          <div className="space-y-4">
-            {comments.slice(0, 3).map((comment) => (
-              <div key={comment.id} className="rounded border border-gray-100 bg-gray-50 p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="font-medium">
-                    {comment.user ? comment.user.nickname : comment.guest_nickname || 'ゲスト'}
-                  </div>
-                  <div className="text-xs text-gray-500">{formatDate(comment.created_at)}</div>
+        {/* 通知エリア（エラーと成功メッセージ） */}
+        {(error || success) && (
+          <div className="mb-6">
+            {error && (
+              <div className="mb-2 rounded-lg bg-red-50 p-4 text-red-700">
+                <div className="flex items-center">
+                  <svg
+                    className="mr-2 h-5 w-5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                  <span>{error}</span>
                 </div>
-                <p className="text-gray-700">{comment.content}</p>
               </div>
-            ))}
+            )}
 
-            {comments.length > 3 && (
-              <div className="text-center">
-                <Link
-                  href={`/works/${work.id}/comments`}
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  すべてのコメントを表示
-                </Link>
+            {success && (
+              <div className="rounded-lg bg-green-50 p-4 text-green-700">
+                <div className="flex items-center">
+                  <svg
+                    className="mr-2 h-5 w-5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                  <span>{success}</span>
+                </div>
               </div>
             )}
           </div>
-        ) : (
-          <p className="text-center text-gray-500">まだコメントはありません</p>
         )}
 
-        <div className="mt-6">
-          <Link
-            href={`/works/${work.id}/comments/new`}
-            className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            <svg
-              className="mr-2 h-4 w-4"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
+        {/* 実行ボタンエリア */}
+        {processingWork && processingWork.pde_content && (
+          <div className="mb-6 flex justify-between rounded-lg bg-white p-4 shadow-sm">
+            <button
+              onClick={executeProcessingCode}
+              disabled={isProcessing || !isScriptLoaded}
+              className="flex items-center rounded-lg bg-blue-600 px-5 py-2.5 text-center text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none disabled:bg-blue-300"
             >
-              <path
-                fillRule="evenodd"
-                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                clipRule="evenodd"
-              ></path>
-            </svg>
-            コメントを追加
-          </Link>
-        </div>
-      </div>
+              <PlayIcon className="mr-2 h-5 w-5" />
+              {isProcessing
+                ? '処理中...'
+                : isScriptLoaded
+                  ? 'スケッチを実行'
+                  : 'スクリプト読み込み中...'}
+            </button>
 
-      {/* ページの一番上に戻るボタン */}
-      {showScrollToTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed right-4 bottom-4 rounded-full bg-blue-500 p-3 text-white shadow-lg transition hover:bg-blue-600"
-          aria-label="ページの一番上に戻る"
-        >
-          <svg
-            className="h-6 w-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
+            <div className="flex space-x-2">
+              <a
+                href={`${API_BASE_URL}/works/${work.id}/file`}
+                download={work.title}
+                className="flex items-center rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+              >
+                <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
+                ダウンロード
+              </a>
+
+              <button
+                onClick={toggleLike}
+                disabled={likeMutation.isPending}
+                className={`flex items-center rounded-md px-4 py-2 text-sm font-medium ${
+                  likeMutation.isPending
+                    ? 'cursor-wait bg-gray-200 text-gray-500'
+                    : liked
+                      ? 'bg-pink-100 text-pink-700 hover:bg-pink-200'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {liked ? (
+                  <HeartIconSolid className="mr-2 h-5 w-5 text-pink-500" />
+                ) : (
+                  <HeartIcon className="mr-2 h-5 w-5" />
+                )}
+                {likeMutation.isPending ? '処理中...' : liked ? 'いいね済み' : 'いいね'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* プレビューエリア */}
+        <div className="mb-8 rounded-lg bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-medium text-gray-900">プレビュー</h2>
+          <div className="flex aspect-video w-full items-center justify-center rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-inner transition-all">
+            {isPreviewActive ? (
+              <canvas
+                id="canvas"
+                key={canvasKey}
+                width="600"
+                height="400"
+                className="border border-gray-300"
+              ></canvas>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center text-gray-500">
+                <PlayIcon className="mb-2 h-12 w-12" />
+                <p className="text-lg">
+                  「スケッチを実行」ボタンをクリックして
+                  <br />
+                  プレビューを表示してください
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
+            <p className="font-medium">使い方:</p>
+            <ol className="mt-2 ml-5 list-decimal">
+              <li>上部の「スケッチを実行」ボタンをクリックしてプレビューを表示</li>
+              <li>プレビューが表示されない場合は、コードを確認してください</li>
+            </ol>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          {/* 左側: コード表示エリア - 5/12 */}
+          <div className="lg:col-span-5">
+            {/* PDEコード表示 */}
+            {processingWork && processingWork.pde_content && (
+              <div className="mb-6 rounded-lg bg-white p-6 shadow-sm">
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="flex items-center text-lg font-medium text-gray-900">
+                    <CodeBracketIcon className="mr-2 h-5 w-5 text-blue-500" />
+                    PDEソースコード
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setIsCodeVisible(!isCodeVisible)}
+                    className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                  >
+                    {isCodeVisible ? 'コードを隠す' : 'コードを表示'}
+                  </button>
+                </div>
+
+                {isCodeVisible && (
+                  <div className="relative">
+                    <pre className="max-h-96 overflow-auto rounded-lg bg-gray-900 p-4 text-sm text-gray-100">
+                      <code>{processingWork.pde_content}</code>
+                    </pre>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(processingWork.pde_content)}
+                      className="absolute top-2 right-2 rounded bg-gray-700 p-2 text-white hover:bg-gray-600"
+                      title="コピー"
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path>
+                        <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"></path>
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* 右側: JS表示エリア - 7/12 */}
+          <div className="lg:col-span-7">
+            {/* 変換されたJSコード（表示/非表示切り替え可能） */}
+            {jsCode ? (
+              <div className="mb-6 rounded-lg bg-white p-6 shadow-sm">
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="flex items-center text-lg font-medium text-gray-900">
+                    <CodeBracketIcon className="mr-2 h-5 w-5 text-yellow-500" />
+                    変換されたJavaScriptコード
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setShowJsCode(!showJsCode)}
+                    className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                  >
+                    {showJsCode ? 'コードを隠す' : 'コードを表示'}
+                  </button>
+                </div>
+
+                {showJsCode && (
+                  <pre className="max-h-96 overflow-auto rounded-lg bg-gray-900 p-4 text-xs text-white">
+                    <code>{jsCode}</code>
+                  </pre>
+                )}
+              </div>
+            ) : (
+              <div className="mb-6 rounded-lg bg-white p-6 shadow-sm">
+                <p className="text-center text-gray-500">スケッチを実行してください</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* コメントセクション */}
+        <div id="comments" className="mt-8 rounded-lg bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-xl font-medium text-gray-900">
+            コメント ({work.comments_count})
+          </h2>
+
+          {comments.length > 0 ? (
+            <div className="space-y-4">
+              {comments.slice(0, 3).map((comment) => (
+                <div
+                  key={comment.id}
+                  className="rounded border-l-4 border-l-blue-400 bg-gray-50 p-4"
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="font-medium">
+                      {comment.user ? comment.user.nickname : comment.guest_nickname || 'ゲスト'}
+                    </div>
+                    <div className="text-xs text-gray-500">{formatDate(comment.created_at)}</div>
+                  </div>
+                  <p className="text-gray-700">{comment.content}</p>
+                </div>
+              ))}
+
+              {comments.length > 3 && (
+                <div className="pt-2 text-center">
+                  <Link
+                    href={`/works/${work.id}/comments`}
+                    className="inline-flex items-center text-blue-600 hover:underline"
+                  >
+                    すべてのコメントを表示
+                    <svg
+                      className="ml-1 h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </Link>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="py-6 text-center text-gray-500">まだコメントはありません</p>
+          )}
+
+          {/* コメント投稿フォーム */}
+          <div className="mt-6 border-t border-gray-200 pt-6">
+            <h3 className="mb-4 font-medium text-gray-900">コメントを投稿</h3>
+            <form onSubmit={handleCommentSubmit}>
+              <div className="mb-4">
+                <textarea
+                  className="w-full rounded-md border border-gray-300 p-3 focus:border-blue-500 focus:outline-none"
+                  rows={3}
+                  placeholder="コメントを入力してください"
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  required
+                />
+              </div>
+
+              {!isAuthenticated && (
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    className="w-full rounded-md border border-gray-300 p-3 focus:border-blue-500 focus:outline-none"
+                    placeholder="ニックネーム（任意）"
+                    value={guestNickname}
+                    onChange={(e) => setGuestNickname(e.target.value)}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    ※ログインしていない場合は、ゲストとして投稿されます
+                  </p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={commentMutation.isPending || !commentText.trim()}
+                className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
+              >
+                {commentMutation.isPending ? '送信中...' : '投稿する'}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* ページの一番上に戻るボタン */}
+        {showScrollToTop && (
+          <button
+            onClick={scrollToTop}
+            className="fixed right-6 bottom-6 rounded-full bg-blue-500 p-3 text-white shadow-lg transition hover:bg-blue-600 focus:outline-none"
+            aria-label="ページの一番上に戻る"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 10l7-7m0 0l7 7m-7-7v18"
-            />
-          </svg>
-        </button>
-      )}
-    </div>
+            <ChevronUpIcon className="h-6 w-6" />
+          </button>
+        )}
+      </div>
+    </>
   );
 }

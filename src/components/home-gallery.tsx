@@ -2,19 +2,7 @@ import Link from 'next/link';
 import WorksCard from '../components/workscard';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
-
-interface Work {
-  id: string;
-  title: string;
-  created_at: string;
-  description: string;
-  user: {
-    nickname: string;
-  };
-  thumbnail_url: string;
-  views?: number;
-  likes_count?: number;
-}
+import { Work, workToCardProps } from '../types/dataTypes';
 
 interface HomeGalleryProps {
   data: {
@@ -81,14 +69,7 @@ export default function HomeGallery({ data }: HomeGalleryProps) {
                 delay: 0.2 + index * 0.1,
               }}
             >
-              <WorksCard
-                id={work.id}
-                title={work.title}
-                date={work.created_at}
-                description={work.description}
-                username={work.user.nickname}
-                thumbnail={work.thumbnail_url}
-              />
+              <WorksCard {...workToCardProps(work)} />
             </motion.div>
           ))}
         </div>
@@ -125,14 +106,7 @@ export default function HomeGallery({ data }: HomeGalleryProps) {
                 delay: 0.2 + index * 0.1,
               }}
             >
-              <WorksCard
-                id={work.id}
-                title={work.title}
-                date={work.created_at}
-                description={work.description}
-                username={work.user.nickname}
-                thumbnail={work.thumbnail_url}
-              />
+              <WorksCard {...workToCardProps(work)} />
             </motion.div>
           ))}
         </div>

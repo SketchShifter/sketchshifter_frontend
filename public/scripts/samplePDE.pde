@@ -1,10 +1,16 @@
 void setup() {
-    size(400,400);
+    size(400, 400);
+    background(255);
 }
 
-void draw() 
-{ 
-  background(204);
-  float mx = constrain(mouseX, 30, 200);
-  rect(mx-10, 40, 20, 20);
+void draw() {
+    background(255); 
+    translate(width / 2, height / 2); 
+    
+    float angle = frameCount * 0.05;
+    float x = cos(angle) * 100;
+    float y = sin(angle) * 100;
+    
+    fill(0, 0, 255);
+    ellipse(x, y, 30, 30);
 }

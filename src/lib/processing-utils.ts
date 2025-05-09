@@ -236,3 +236,62 @@ export const compileAndRun = (
     setShowDebug(true);
   }
 };
+
+// ProcessingコードをプレビューするためのAPIを提供する関数
+export const previewProcessingCode = async (
+  pdeCode: string,
+  isScriptLoaded: boolean,
+  setError: (error: string | null) => void,
+  setSuccess: (message: string | null) => void,
+  setIsProcessing: (isProcessing: boolean) => void,
+  setJsCode: (code: string) => void,
+  setCanvasKey: (fn: (prev: number) => number) => void
+) => {
+  try {
+    setIsProcessing(true);
+    setError(null);
+    setSuccess(null);
+
+    if (!isScriptLoaded) {
+      setError('スクリプトがまだ読み込まれていません。少々お待ちください。');
+      return;
+    }
+
+    if (!pdeCode) {
+      setError('PDEコードがありません');
+      return;
+    }
+
+    // キャンバスをクリーンアップ
+    fullCanvasReset((message) => {
+      console.log(message);
+    }, setCanvasKey);
+
+    // コンパイルと実行を行う
+    compileAndRun(
+      pdeCode,
+      isScriptLoaded,
+      (message) => {
+        console.log(message);
+        // エラーが含まれているかチェック
+        if (message.includes('エラー')) {
+          setError(message);
+        }
+      },
+      setJsCode,
+      () => {}, // デバッグ表示は不要なので空の関数
+      setCanvasKey
+    );
+
+    setSuccess('プレビューを実行しました');
+  } catch (error) {
+    console.error('プレビュー実行エラー:', error);
+    if (error instanceof Error) {
+      setError(`エラーが発生しました: ${error.message}`);
+    } else {
+      setError('予期せぬエラーが発生しました');
+    }
+  } finally {
+    setIsProcessing(false);
+  }
+};

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Script from 'next/script';
-import ProcessingCanvas from '@/components/pde/ProcessingCanvas';
+import ProcessingCanvas from './ProcessingCanvas';
 import { setupCanvasUtils, compileAndRun } from '@/lib/processing-utils';
 import '@/types/global-types';
 

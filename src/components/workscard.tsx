@@ -1,18 +1,22 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
-import { HeartIcon } from '@heroicons/react/24/solid';
-import { toast } from 'react-toastify';
+import { HeartIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
+import { formatDate } from '@/lib/formatDate';
+import { useLikeWork } from '@/hooks/use-like';
+import { useCurrentUser } from '@/hooks/use-auth';
 
-interface CardProps {
-  id: string;
+// Workから必要なプロパティを取り出して表示用に最適化したインターフェース
+export interface CardProps {
+  id: string | number;
   title: string;
-  date: string;
+  date: string; // created_atの別名
   description: string;
-  username: string;
-  thumbnail: string;
+  username: string; // user.nicknameの別名
+  thumbnail: string; // thumbnail_urlの別名
   views?: number;
   likes_count?: number;
 }
@@ -27,8 +31,13 @@ const WorksCard: React.FC<CardProps> = ({
   views = 0,
   likes_count = 0,
 }) => {
-  const [isLiked, setIsLiked] = useState(false);
-  const [localLikes, setLocalLikes] = useState(likes_count);
+  const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(likes_count);
+
+  // TanStack Queryのミューテーションを使用
+  const likeMutation = useLikeWork();
+  // 認証状態を確認
+  const { isAuthenticated } = useCurrentUser();
 
   // サムネイルのフォールバックコンポーネント
   const ThumbnailFallback = () => (
@@ -54,83 +63,67 @@ const WorksCard: React.FC<CardProps> = ({
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault(); // 親のリンク遷移を防ぐ
 
+    if (!isAuthenticated) {
+      // useCurrentUserから取得した認証状態を利用
+      return;
+    }
+
     try {
-      const token = localStorage.getItem('token'); // トークンを取得
-      if (!token) {
-        toast.error('ログインが必要です。');
-        return;
-      }
+      // TanStack Queryのミューテーションを実行
+      await likeMutation.mutateAsync(id);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/works/${id}/like`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        setIsLiked(true);
-        setLocalLikes((prev) => prev + 1);
-        toast.success('いいねを押しました！');
-      } else {
-        const errorData = await response.json();
-        toast.error(`エラー: ${errorData.message || 'いいねに失敗しました。'}`);
-      }
+      // UI状態を更新
+      setLiked(true);
+      setLikesCount((prev) => prev + 1);
     } catch (error) {
-      console.error('エラーが発生しました:', error);
-      toast.error('サーバーに接続できませんでした。');
+      // エラー処理はミューテーションのonErrorで行われる
+      console.error('いいね処理中にエラー:', error);
     }
   };
 
   return (
-    <Link href={`/artworks/${id}`}>
-      <div className="overflow-hidden rounded-lg bg-white shadow-md transition-all hover:shadow-lg">
-        {/* サムネイル */}
+    <Link href={`/artworks/${id}`} className="group">
+      <div className="h-full overflow-hidden rounded-lg bg-white shadow-md transition-shadow hover:shadow-lg">
         <div className="relative h-48 w-full">
           {thumbnail ? (
             <Image
               src={thumbnail}
               alt={title}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="object-cover"
-              onError={(e) => {
-                // エラー時は画像要素を非表示にしてフォールバックを表示
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
+              layout="fill"
+              objectFit="cover"
+              className="transition-transform group-hover:scale-105"
             />
           ) : (
             <ThumbnailFallback />
           )}
-
-          {/* いいねボタン - 重ねて表示 */}
-          <button
-            className={`absolute right-2 bottom-2 rounded-full p-2 shadow-md transition ${
-              isLiked ? 'bg-red-100 text-red-500' : 'bg-white text-red-500 hover:bg-red-100'
-            }`}
-            title="いいね"
-            onClick={handleLike}
-          >
-            <HeartIcon className="h-6 w-6" />
-          </button>
         </div>
-
-        {/* コンテンツ */}
         <div className="p-4">
-          <h3 className="mb-1 truncate text-lg font-semibold text-gray-900">{title}</h3>
-          <p className="mb-3 text-sm text-gray-500">{username}</p>
-
-          {/* 説明文 - 2行で切り捨て */}
-          <p className="mb-3 line-clamp-2 text-sm text-gray-700">{description}</p>
-
-          {/* スタッツ情報 */}
-          <div className="flex justify-between text-sm text-gray-500">
-            <div className="flex space-x-3">
-              <span>👁️ {views}</span>
-              <span>❤️ {localLikes}</span>
+          <h3 className="mb-2 line-clamp-1 text-lg font-semibold">{title}</h3>
+          <div className="mb-3 flex items-center text-sm text-gray-600">
+            <span>{username}</span>
+            <span className="mx-2">•</span>
+            <span>{formatDate(date)}</span>
+          </div>
+          {description && <p className="mb-3 line-clamp-2 text-sm text-gray-700">{description}</p>}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <span className="flex items-center text-sm text-gray-600">
+                <EyeIcon className="mr-1 h-4 w-4" />
+                {views}
+              </span>
+              <button
+                onClick={handleLike}
+                disabled={likeMutation.isPending}
+                className={`flex items-center text-sm ${liked ? 'text-pink-600' : 'text-gray-600'}`}
+              >
+                {liked ? (
+                  <HeartIconSolid className="mr-1 h-4 w-4" />
+                ) : (
+                  <HeartIcon className="mr-1 h-4 w-4" />
+                )}
+                {likesCount}
+              </button>
             </div>
-            <span>{new Date(date).toLocaleDateString()}</span>
           </div>
         </div>
       </div>

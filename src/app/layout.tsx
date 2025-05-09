@@ -2,6 +2,8 @@ import './globals.css';
 import TopBar from '@/components/topbar';
 import Footer from '@/components/Footer/Footer';
 import { ToastContainer } from 'react-toastify';
+import { QueryProvider } from '@/providers/query-provider';
+import 'react-toastify/dist/ReactToastify.css';
 // import { Metadata } from 'next';
 // import ClientToastContainer from '@/components/ToastContainer';
 
@@ -28,15 +30,17 @@ import { ToastContainer } from 'react-toastify';
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja">
-      <body className="overflow-y-scroll">
-        <header className="fixed z-997 w-screen">
-          <TopBar />
-        </header>
-        <main className="min-h-screen bg-gray-50 pt-18">
-          <ToastContainer />
-          <div>{children}</div>
+      <body className="flex min-h-screen flex-col overflow-y-scroll">
+        <QueryProvider>
+          <header className="fixed z-997 w-screen">
+            <TopBar />
+          </header>
+          <main className="flex flex-grow flex-col bg-gray-50 pt-18">
+            <ToastContainer />
+            <div className="flex-grow">{children}</div>
+          </main>
           <Footer />
-        </main>
+        </QueryProvider>
       </body>
     </html>
   );

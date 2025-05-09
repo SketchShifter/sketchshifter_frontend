@@ -1,32 +1,24 @@
 'use client';
 
-import { type ReturnDataProps } from '@/lib/auth';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { getAuthSession } from '@/lib/auth';
-import { useRouter } from 'next/navigation';
-// import { useSelector } from 'react-redux';
+import { useCurrentUser, useLogout } from '@/hooks/use-auth';
 
 const TopBar = () => {
-  const [session, setSession] = useState<ReturnDataProps>(null);
   const [humOpen, setHumOpen] = useState(false);
 
-  const router = useRouter();
-  useEffect(() => {
-    setHumOpen(false);
-    const fetchSession = async () => {
-      const getSession = await getAuthSession();
-      setSession(getSession);
-    };
-    fetchSession();
-  }, []);
+  // カスタムフックを使用してユーザー情報と認証状態を取得
+  const { user, isAuthenticated } = useCurrentUser();
+  // ログアウト処理のフックを取得
+  const logout = useLogout();
 
-  const handleLogout = async () => {
-    localStorage.removeItem('token');
-    setSession(null);
-    router.push('/login');
+  const handleLogout = () => {
+    // TanStack Query と Zustand で管理するログアウト処理を実行
+    logout();
+    setHumOpen(false);
   };
+
   const Button = ({
     title,
     props,
@@ -48,12 +40,14 @@ const TopBar = () => {
       </button>
     );
   };
+
   const Hum = ({ open }: { open: boolean }) => {
     const [cn, setCN] = useState({
       top: 'rotate-none translate-none',
       middle: 'rotate-none',
       bottom: 'rotate-none translate-none',
     });
+
     useEffect(() => {
       if (open) {
         setCN({
@@ -69,6 +63,7 @@ const TopBar = () => {
         });
       }
     }, [open]);
+
     return (
       <>
         <div
@@ -112,12 +107,11 @@ const TopBar = () => {
       <div className={`absolute top-5 right-10 z-999 md:hidden`}>
         <Hum open={humOpen} />
       </div>
-      {/* <div> */}
       <div
         className={`fixed left-0 z-998 h-screen w-screen overflow-hidden bg-gray-800 px-10 py-20 transition-all duration-500 ease-in-out md:contents ${humOpen ? 'top-0' : 'top-[-100vh]'}`}
       >
         <div className="flex flex-col space-x-4 md:flex-row md:flex-nowrap">
-          {session ? (
+          {isAuthenticated && user ? (
             <>
               <Button title="投稿" props={{ href: '/mylist/submit' }} />
               <Button title="プレビュー" props={{ href: '/preview' }} />
@@ -132,7 +126,7 @@ const TopBar = () => {
               >
                 ログアウト
               </button>
-              <Button title={`${session.nickname} さん`} props={{ href: '/mylist' }} />
+              <Button title={`${user.nickname} さん`} props={{ href: '/mylist' }} />
             </>
           ) : (
             <>
@@ -140,7 +134,6 @@ const TopBar = () => {
               <Button title="作品一覧" props={{ href: '/artworks' }} />
               <Button title="ログイン" props={{ href: '/login' }} />
               <Button title="アカウント登録" props={{ href: '/register' }} />
-              {/* <p className="text-white">ゲスト さん</p> */}
             </>
           )}
         </div>
