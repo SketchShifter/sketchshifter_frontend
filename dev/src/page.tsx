@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, ChangeEvent, FormEvent } from 'react';
-import { setupProcessingEnvironment } from '../../../public/processingEmulator';
+import { setupProcessingEnvironment } from '../../public/processingEmulator';
 
 // ファイルアップロード用の型定義
 interface FileInputEvent extends ChangeEvent<HTMLInputElement> {
