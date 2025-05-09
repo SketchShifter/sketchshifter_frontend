@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>PDE Compiler in Browser</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     canvas { border: 1px solid black; margin-top: 10px; }
     textarea { width: 100%; height: 150px; }
@@ -13,13 +12,13 @@
 </head>
 <body>
   <h3>PDEコード入力：</h3>
-  <textarea id="pdeCode" placeholder="PDEコードを入力してください"></textarea>
+  <textarea id="pdeCode"></textarea>
   <br>
   <button id="compileBtn">コンパイル＆実行</button>
   <button id="showDebugBtn">デバッグ情報表示</button>
   <br>
   <h3>変換されたJavaScriptコード：</h3>
-  <textarea id="output" readonly placeholder="変換されたJavaScriptコードが表示されます"></textarea>
+  <textarea id="output" readonly></textarea>
   <br>
   <div id="debugContainer" style="display: none;">
     <h3>デバッグ情報：</h3>
@@ -49,7 +48,7 @@
       };
       
       // samplePDE.pdeからコードを読み込み
-      fetch('samplePDEs1.pde')
+      fetch('samplePDE.pde')
         .then(response => response.text())
         .then(code => {
           document.getElementById('pdeCode').value = code;
@@ -112,5 +111,6 @@
       }
     });
   </script>
+
 </body>
 </html>
