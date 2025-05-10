@@ -1,7 +1,7 @@
 'use client';
 
 import HomeGallery from '@/components/home-gallery';
-import { useWorks } from '@/hooks/use-works';
+import { useWorks } from '@/hooks/use-work-hooks';
 
 export default function ArtworksPage() {
   // TanStack Queryを使用して作品データを取得

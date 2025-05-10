@@ -8,7 +8,7 @@ const Footer = () => {
           <div className="text-sm text-white">
             <p>SSJS. All rights reserved.</p>
           </div>
-          {/* <div className="flex space-x-4 text-sm text-white">
+          <div className="flex space-x-4 text-sm text-white">
             <a href="/terms" className="hover:text-gray-300">
               利用規約
             </a>
@@ -18,7 +18,7 @@ const Footer = () => {
             <a href="/contact" className="hover:text-gray-300">
               お問い合わせ
             </a>
-          </div> */}
+          </div>
         </div>
       </div>
     </footer>

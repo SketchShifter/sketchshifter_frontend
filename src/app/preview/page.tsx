@@ -256,7 +256,7 @@ export default function PreviewPage() {
                     onChange={handleCodeChange}
                     rows={15}
                     placeholder="void setup() {
-  size(400, 400);
+  size(200, 200);
 }
 
 void draw() {
@@ -275,7 +275,7 @@ void draw() {
                       type="button"
                       onClick={() =>
                         setPdeCode(`void setup() {
-  size(400, 400);
+  size(200, 200);
 }
 
 void draw() {
@@ -338,8 +338,8 @@ void draw() {
                 ref={canvasRef}
                 id="canvas" // canvas IDを変更してプロジェクトの他のコンポーネントと互換性を持たせる
                 key={canvasKey} // キーを変更することで強制的に再レンダリング
-                width="400"
-                height="400"
+                width="200"
+                height="200"
                 className="border border-gray-300"
               ></canvas>
             </div>

@@ -115,6 +115,19 @@ export const WorksApi = {
       token,
     });
   },
+
+  // 特定ユーザーの作品一覧を取得
+  getUserWorks: (userId: string, page: number = 1, limit: number = 20, token?: string) => {
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', String(page));
+    queryParams.append('limit', String(limit));
+
+    const query = `?${queryParams.toString()}`;
+    return fetchApi<{ works: Work[]; total: number; pages: number; page: number }>(
+      `/users/${userId}/works${query}`,
+      { token }
+    );
+  },
 };
 
 /**

@@ -3,7 +3,7 @@
 import HomeGallery from '@/components/home-gallery';
 import Top from '@/components/top/Top';
 import { motion } from 'framer-motion';
-import { useWorks } from '@/hooks/use-works';
+import { useWorks } from '@/hooks/use-work-hooks';
 
 export default function HomePage() {
   // TanStack Queryを使用して作品データを取得

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { HeartIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { formatDate } from '@/lib/formatDate';
-import { useLikeWork } from '@/hooks/use-like';
+import { useLikeWork } from '@/hooks/use-work-hooks';
 import { useCurrentUser } from '@/hooks/use-auth';
 
 // Workから必要なプロパティを取り出して表示用に最適化したインターフェース

@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRegister } from '@/hooks/use-auth';
-import { RegisterInput } from '@/types/dataTypes';
+import type { RegisterInput } from '@/types/dataTypes';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 export default function RegisterPage() {
@@ -36,14 +37,25 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-[80vh] items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 py-6">
-      <div className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-xl">
-        <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-8 text-center text-white">
-          <h1 className="text-3xl font-bold">アカウント作成</h1>
-          <p className="mt-2 text-gray-300">新規アカウントを作成して始めましょう</p>
-        </div>
+    <div className="flex h-screen w-full overflow-hidden">
+      {/* 左側：画像エリア */}
+      <div className="relative hidden w-3/5 md:block">
+        <Image
+          src="/1037680.jpg"
+          alt="グローバルネットワーク"
+          fill
+          priority
+          className="object-cover"
+          sizes="(max-width: 1200px) 60vw, 50vw"
+        />
+      </div>
 
-        <div className="px-6 py-6">
+      {/* 右側：登録フォーム */}
+      <div className="flex w-full flex-col justify-center bg-white px-6 py-12 md:w-2/5 md:px-12">
+        <div className="mx-auto w-full max-w-md">
+          <h1 className="mb-2 text-3xl font-bold text-gray-900">アカウント作成</h1>
+          <p className="mb-8 text-gray-600">新規アカウントを作成して始めましょう</p>
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -173,7 +185,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={registerMutation.isPending}
-                className="w-full rounded-md bg-gradient-to-r from-gray-700 to-gray-900 px-4 py-3 text-white shadow-sm hover:from-gray-800 hover:to-black focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none disabled:opacity-70"
+                className="w-full rounded-md bg-gray-700 px-4 py-3 text-white shadow-sm hover:bg-black focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none disabled:opacity-70"
               >
                 {registerMutation.isPending ? '登録中...' : 'アカウント作成'}
               </button>

@@ -27,7 +27,7 @@ import {
   useLikeStatus,
   useLikeToggle,
   useAddComment,
-} from '@/hooks/use-work';
+} from '@/hooks/use-work-hooks';
 import { useCurrentUser } from '@/hooks/use-auth';
 
 export default function ArtworkDetailPage() {
@@ -371,12 +371,14 @@ export default function ArtworkDetailPage() {
               disabled={isProcessing || !isScriptLoaded}
               className="flex items-center rounded-lg bg-blue-600 px-5 py-2.5 text-center text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none disabled:bg-blue-300"
             >
-              <PlayIcon className="mr-2 h-5 w-5" />
-              {isProcessing
-                ? '処理中...'
-                : isScriptLoaded
-                  ? 'スケッチを実行'
-                  : 'スクリプト読み込み中...'}
+              <PlayIcon className="h-5 w-5 md:mr-2" />
+              <span>
+                {isProcessing
+                  ? '処理中...'
+                  : isScriptLoaded
+                    ? 'スケッチを実行'
+                    : 'スクリプト読み込み中...'}
+              </span>
             </button>
 
             <div className="flex space-x-2">
@@ -384,9 +386,10 @@ export default function ArtworkDetailPage() {
                 href={`${API_BASE_URL}/works/${work.id}/file`}
                 download={work.title}
                 className="flex items-center rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                title="ダウンロード"
               >
-                <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
-                ダウンロード
+                <ArrowDownTrayIcon className="h-5 w-5 md:mr-2" />
+                <span className="hidden md:inline">ダウンロード</span>
               </a>
 
               <button
@@ -399,13 +402,16 @@ export default function ArtworkDetailPage() {
                       ? 'bg-pink-100 text-pink-700 hover:bg-pink-200'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
+                title={liked ? 'いいねを取り消す' : 'いいね'}
               >
                 {liked ? (
-                  <HeartIconSolid className="mr-2 h-5 w-5 text-pink-500" />
+                  <HeartIconSolid className="h-5 w-5 text-pink-500 md:mr-2" />
                 ) : (
-                  <HeartIcon className="mr-2 h-5 w-5" />
+                  <HeartIcon className="h-5 w-5 md:mr-2" />
                 )}
-                {likeMutation.isPending ? '処理中...' : liked ? 'いいね済み' : 'いいね'}
+                <span className="hidden md:inline">
+                  {likeMutation.isPending ? '処理中...' : liked ? 'いいね済み' : 'いいね'}
+                </span>
               </button>
             </div>
           </div>

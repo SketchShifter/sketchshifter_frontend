@@ -16,8 +16,8 @@ export const setupCanvasUtils = (addLogMessage: LogCallback) => {
     window.canvas = canvas;
 
     // キャンバスのサイズをリセット
-    canvas.width = 400;
-    canvas.height = 400;
+    canvas.width = 300;
+    canvas.height = 300;
 
     // スタイルを適用
     canvas.style.width = `${canvas.width}px`;
