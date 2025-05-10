@@ -416,7 +416,7 @@ export default function EditArtworkPage() {
               <button
                 type="button"
                 onClick={triggerThumbnailInput}
-                className="ml-4 rounded-md bg-gray-100 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
+                className="ml-4 cursor-pointer rounded-md bg-gray-100 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
               >
                 {thumbnailPreview || currentThumbnailUrl ? '変更する' : '選択する'}
               </button>
@@ -460,7 +460,7 @@ export default function EditArtworkPage() {
             <button
               type="button"
               onClick={confirmDelete}
-              className="flex items-center rounded-md bg-red-100 px-4 py-2 text-red-700 hover:bg-red-200"
+              className="flex cursor-pointer items-center rounded-md bg-red-100 px-4 py-2 text-red-700 hover:bg-red-200"
             >
               <TrashIcon className="mr-2 h-5 w-5" />
               作品を削除
@@ -476,7 +476,7 @@ export default function EditArtworkPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="rounded-md bg-blue-600 px-6 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
+                className="cursor-pointer rounded-md bg-blue-600 px-6 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
               >
                 {isSubmitting ? '更新中...' : '更新する'}
               </button>
@@ -487,7 +487,7 @@ export default function EditArtworkPage() {
 
       {/* 削除確認モーダル */}
       {showDeleteConfirm && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-96 rounded-lg bg-white p-6 shadow-lg">
             <h3 className="mb-4 text-lg font-medium text-gray-900">作品を削除しますか？</h3>
             <p className="mb-6 text-sm text-gray-500">
@@ -497,7 +497,7 @@ export default function EditArtworkPage() {
               <button
                 type="button"
                 onClick={() => setShowDeleteConfirm(false)}
-                className="rounded-md bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
+                className="cursor-pointer rounded-md bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
               >
                 キャンセル
               </button>
@@ -505,7 +505,7 @@ export default function EditArtworkPage() {
                 type="button"
                 onClick={executeDelete}
                 disabled={deleteMutation.isPending}
-                className="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:bg-red-300"
+                className="cursor-pointer rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:bg-red-300"
               >
                 {deleteMutation.isPending ? '削除中...' : '削除する'}
               </button>

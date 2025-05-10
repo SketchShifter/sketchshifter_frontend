@@ -36,7 +36,7 @@ const TopBar = () => {
   }) => {
     return (
       <button
-        className={`group relative w-full rounded-md border-b border-gray-700 px-5 py-3 text-white transition-all duration-300 hover:bg-gray-700 hover:text-gray-300 md:w-auto md:rounded-none md:border-none md:p-0 md:hover:bg-transparent`}
+        className={`group relative w-full rounded-md border-b border-gray-700 px-5 py-3 text-white transition-all duration-300 hover:cursor-pointer hover:bg-gray-700 hover:text-gray-300 md:w-auto md:rounded-none md:border-none md:p-0 md:hover:bg-transparent`}
         {...btnprops}
         onClick={() => {
           setHumOpen(false);

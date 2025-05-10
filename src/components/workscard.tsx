@@ -121,7 +121,7 @@ const WorksCard: React.FC<CardProps> = ({
               <button
                 onClick={handleLike}
                 disabled={likeMutation.isPending}
-                className={`flex items-center text-sm transition-colors ${
+                className={`flex cursor-pointer items-center text-sm transition-colors ${
                   liked ? 'text-pink-600' : 'text-gray-600'
                 } ${likeMutation.isPending ? 'opacity-50' : 'hover:text-pink-600'}`}
               >

@@ -34,7 +34,8 @@ export default function ProjectsPage() {
     myProjects?.projects.filter(
       (project) =>
         project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.description.toLowerCase().includes(searchQuery.toLowerCase())
+        project.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        false
     ) || [];
 
   // プロジェクト作成ハンドラー
@@ -101,14 +102,14 @@ export default function ProjectsPage() {
           <div className="flex space-x-4">
             <button
               onClick={() => setShowJoinModal(true)}
-              className="flex items-center rounded-md bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
+              className="flex cursor-pointer items-center rounded-md bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
             >
               <PlusIcon className="mr-2 h-5 w-5" />
               参加する
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              className="flex cursor-pointer items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
             >
               <PlusIcon className="mr-2 h-5 w-5" />
               新規作成
@@ -134,7 +135,7 @@ export default function ProjectsPage() {
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('my')}
-            className={`border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
+            className={`cursor-pointer border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
               activeTab === 'my'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
@@ -144,7 +145,7 @@ export default function ProjectsPage() {
           </button>
           <button
             onClick={() => setActiveTab('all')}
-            className={`border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
+            className={`cursor-pointer border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
               activeTab === 'all'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
@@ -170,13 +171,13 @@ export default function ProjectsPage() {
           <div className="flex justify-center space-x-4">
             <button
               onClick={() => setShowCreateModal(true)}
-              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              className="cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
             >
               プロジェクトを作成
             </button>
             <button
               onClick={() => setShowJoinModal(true)}
-              className="rounded-md bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
+              className="cursor-pointer rounded-md bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
             >
               プロジェクトに参加
             </button>
@@ -233,7 +234,7 @@ export default function ProjectsPage() {
 
       {/* プロジェクト作成モーダル */}
       {showCreateModal && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-white p-6">
             <h2 className="mb-4 text-xl font-bold">新規プロジェクト作成</h2>
             <form onSubmit={handleCreateProject}>
@@ -269,14 +270,14 @@ export default function ProjectsPage() {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="rounded-md bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
+                  className="cursor-pointer rounded-md bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
                 >
                   キャンセル
                 </button>
                 <button
                   type="submit"
                   disabled={createMutation.isPending}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
+                  className="cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
                 >
                   {createMutation.isPending ? '作成中...' : '作成'}
                 </button>
@@ -288,13 +289,14 @@ export default function ProjectsPage() {
 
       {/* プロジェクト参加モーダル */}
       {showJoinModal && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-white p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-bold">プロジェクトに参加</h2>
               <button
+                title="閉じる"
                 onClick={() => setShowJoinModal(false)}
-                className="p-2 text-gray-400 hover:text-gray-600"
+                className="cursor-pointer p-2 text-gray-400 hover:text-gray-600"
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>
@@ -329,14 +331,14 @@ export default function ProjectsPage() {
                 <button
                   type="button"
                   onClick={() => setShowJoinModal(false)}
-                  className="rounded-md bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
+                  className="cursor-pointer rounded-md bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
                 >
                   キャンセル
                 </button>
                 <button
                   type="submit"
                   disabled={joinMutation.isPending}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
+                  className="cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
                 >
                   {joinMutation.isPending ? '参加中...' : '参加する'}
                 </button>

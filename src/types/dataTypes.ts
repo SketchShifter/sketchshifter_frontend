@@ -84,6 +84,7 @@ export interface AuthResponse {
 export interface RegisterInput {
   email: string;
   password: string;
+  passwordRe: string;
   name: string;
   nickname: string;
 }

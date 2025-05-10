@@ -171,7 +171,7 @@ export default function MyListPage() {
                 id={work.id}
                 title={work.title}
                 date={work.created_at}
-                description={work.description}
+                description={work.description || ''}
                 username={work.user?.nickname || 'Unknown'}
                 thumbnail_url={work.thumbnail_url || ''}
                 views={work.views}

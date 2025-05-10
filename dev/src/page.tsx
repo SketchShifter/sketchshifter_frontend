@@ -370,7 +370,7 @@ function draw() {
                   <button
                     type="button"
                     onClick={() => setFile(null)}
-                    className="text-red-500 hover:text-red-700"
+                    className="cursor-pointer text-red-500 hover:text-red-700"
                   >
                     ✕
                   </button>
@@ -385,7 +385,7 @@ function draw() {
                 <button
                   type="button"
                   onClick={() => setShowOriginalCode(!showOriginalCode)}
-                  className="text-sm text-blue-600 hover:text-blue-800"
+                  className="cursor-pointer text-sm text-blue-600 hover:text-blue-800"
                 >
                   {showOriginalCode ? 'コードを隠す' : 'コードを表示'}
                 </button>
@@ -424,7 +424,7 @@ void draw() {
   ellipse(width/2, height/2, 100, 100);
 }`)
                     }
-                    className="rounded bg-gray-200 px-2 py-1 hover:bg-gray-300"
+                    className="cursor-pointer rounded bg-gray-200 px-2 py-1 hover:bg-gray-300"
                   >
                     サンプルを読み込む
                   </button>
@@ -437,7 +437,7 @@ void draw() {
               <button
                 type="submit"
                 disabled={isProcessing}
-                className="flex-1 rounded-lg bg-blue-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none disabled:bg-blue-300"
+                className="flex-1 cursor-pointer rounded-lg bg-blue-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none disabled:bg-blue-300"
               >
                 {isProcessing ? '処理中...' : 'APIでプレビュー実行'}
               </button>
@@ -445,7 +445,7 @@ void draw() {
                 type="button"
                 onClick={executeDirectPreview}
                 disabled={isProcessing}
-                className="rounded-lg bg-gray-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 focus:outline-none disabled:bg-gray-300"
+                className="cursor-pointer rounded-lg bg-gray-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 focus:outline-none disabled:bg-gray-300"
               >
                 直接変換
               </button>
@@ -460,7 +460,7 @@ void draw() {
                 <button
                   type="button"
                   onClick={() => setShowConvertedCode(!showConvertedCode)}
-                  className="text-sm text-blue-600 hover:text-blue-800"
+                  className="cursor-pointer text-sm text-blue-600 hover:text-blue-800"
                 >
                   {showConvertedCode ? 'コードを隠す' : 'コードを表示'}
                 </button>

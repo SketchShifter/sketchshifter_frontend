@@ -31,7 +31,7 @@ export default function UserPage() {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const response = await UsersApi.getProfile(userId, token || undefined);
+        const response = await UsersApi.getUser(userId, token || undefined);
         setUserInfo(response.user);
       } catch (error) {
         console.error('ユーザー情報の取得に失敗しました:', error);
@@ -136,7 +136,7 @@ export default function UserPage() {
             <button
               onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
               disabled={page === 1}
-              className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+              className="inline-flex cursor-pointer items-center rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
             >
               <ChevronLeftIcon className="mr-1 h-4 w-4" />
               前へ
@@ -146,7 +146,7 @@ export default function UserPage() {
               <button
                 key={p}
                 onClick={() => setPage(p)}
-                className={`inline-flex items-center rounded-md px-3 py-2 text-sm font-medium ${
+                className={`inline-flex cursor-pointer items-center rounded-md px-3 py-2 text-sm font-medium ${
                   p === page ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-50'
                 }`}
               >
@@ -157,7 +157,7 @@ export default function UserPage() {
             <button
               onClick={() => setPage((prev) => Math.min(prev + 1, data.pages))}
               disabled={page === data.pages}
-              className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+              className="inline-flex cursor-pointer items-center rounded-md px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
             >
               次へ
               <ChevronRightIcon className="ml-1 h-4 w-4" />

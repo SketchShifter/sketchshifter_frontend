@@ -3,34 +3,33 @@
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowLeftIcon,
   CalendarIcon,
   UserIcon,
   CheckIcon,
-  PlusIcon,
-  XMarkIcon,
   ChartBarIcon,
-  TrashIcon,
   StopIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 import {
   useVote,
   useUserVotes,
   useCastVote,
   useRemoveVote,
-  useAddVoteOption,
-  useRemoveVoteOption,
   useCloseVote,
-  useDeleteVote,
   useUpdateVote,
   useTaskWorks,
   useProject,
   useTask,
+  useAddVoteOption,
 } from '@/hooks/use-project-hooks';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { formatDate } from '@/lib/formatDate';
 import { motion } from 'framer-motion';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
+import { toast } from 'react-hot-toast';
 
 export default function VoteDetailPage() {
   const params = useParams();
@@ -38,27 +37,23 @@ export default function VoteDetailPage() {
   const taskId = parseInt(params.taskId as string);
   const voteId = parseInt(params.voteId as string);
 
-  const [showAddOptionModal, setShowAddOptionModal] = useState(false);
-  const [newOptionText, setNewOptionText] = useState('');
-  const [newOptionWorkId, setNewOptionWorkId] = useState<number | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editMultiSelect, setEditMultiSelect] = useState(false);
 
   const { user: currentUser } = useCurrentUser();
-  const { data: voteData, isLoading } = useVote(voteId);
+  const { data: voteData, isLoading, refetch: refetchVote } = useVote(voteId);
   const { data: userVotesData } = useUserVotes(voteId);
-  const { data: worksData } = useTaskWorks(taskId);
+  const { data: worksData } = useTaskWorks(taskId, 1, 100);
   const { data: projectData } = useProject(projectId);
   const { data: taskData } = useTask(taskId);
   const castVoteMutation = useCastVote(voteId);
   const removeVoteMutation = useRemoveVote(voteId);
-  const addOptionMutation = useAddVoteOption(voteId);
-  const removeOptionMutation = useRemoveVoteOption(voteId);
   const closeVoteMutation = useCloseVote(voteId);
-  const deleteVoteMutation = useDeleteVote(voteId);
   const updateVoteMutation = useUpdateVote(voteId);
+  const addVoteOptionMutation = useAddVoteOption(voteId);
 
   const works = worksData?.works || [];
 
@@ -133,39 +128,14 @@ export default function VoteDetailPage() {
     }
   };
 
-  // オプション追加ハンドラー
-  const handleAddOption = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newOptionText.trim()) return;
-
-    await addOptionMutation.mutateAsync({
-      option_text: newOptionText,
-      work_id: newOptionWorkId || undefined,
-    });
-
-    setNewOptionText('');
-    setNewOptionWorkId(null);
-    setShowAddOptionModal(false);
-  };
-
-  // オプション削除ハンドラー
-  const handleRemoveOption = async (optionId: number) => {
-    if (confirm('この選択肢を削除しますか？')) {
-      await removeOptionMutation.mutateAsync(optionId);
-    }
-  };
-
   // 投票終了ハンドラー
   const handleCloseVote = async () => {
-    if (confirm('この投票を終了しますか？終了後は新たな投票ができなくなります。')) {
+    try {
       await closeVoteMutation.mutateAsync();
-    }
-  };
-
-  // 投票削除ハンドラー
-  const handleDeleteVote = async () => {
-    if (confirm('この投票を削除しますか？この操作は取り消せません。')) {
-      await deleteVoteMutation.mutateAsync();
+      await refetchVote();
+      setShowConfirmModal(false);
+    } catch (error) {
+      console.error('投票終了処理中にエラーが発生しました:', error);
     }
   };
 
@@ -175,8 +145,59 @@ export default function VoteDetailPage() {
     return Math.round((count / totalVotes) * 100);
   };
 
-  // 結果をソート（投票数順）
-  const sortedOptions = [...(vote.options || [])].sort((a, b) => b.vote_count - a.vote_count);
+  // 作品一覧にオプション情報を追加して投票順にソート
+  const worksWithVotes = works
+    .map((work) => {
+      const option = vote.options?.find((opt) => opt.work_id === work.id);
+      return {
+        work,
+        option,
+        isVoted: option ? userVotedOptionIds.includes(option.id) : false,
+        voteCount: option ? option.vote_count : 0,
+        percentage: option ? getPercentage(option.vote_count) : 0,
+        rank: 0,
+      };
+    })
+    .sort((a, b) => b.voteCount - a.voteCount);
+
+  // 同じ投票数の作品には同じ順位を割り当て
+  let currentRank = 1;
+  let prevVoteCount = -1;
+  worksWithVotes.forEach((workData, index) => {
+    if (index > 0 && workData.voteCount !== prevVoteCount) {
+      currentRank = index + 1;
+    }
+    workData.rank = currentRank;
+    prevVoteCount = workData.voteCount;
+  });
+
+  // 作品を一括で選択肢として追加するハンドラー
+  const handleAddAllWorksAsOptions = async () => {
+    if (!works.length) return;
+
+    try {
+      // 既存の選択肢のwork_idを取得
+      const existingWorkIds =
+        vote.options?.filter((opt) => opt.work_id !== null).map((opt) => opt.work_id) || [];
+
+      // まだ選択肢として追加されていない作品のみを追加
+      const worksToAdd = works.filter((work) => !existingWorkIds.includes(work.id));
+
+      // 各作品を選択肢として追加
+      for (const work of worksToAdd) {
+        await addVoteOptionMutation.mutateAsync({
+          option_text: work.title,
+          work_id: work.id,
+        });
+      }
+
+      toast.success(`${worksToAdd.length}件の作品を選択肢として追加しました`);
+      await refetchVote();
+    } catch (error) {
+      console.error('選択肢の追加中にエラーが発生しました:', error);
+      toast.error('選択肢の追加に失敗しました');
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -239,30 +260,26 @@ export default function VoteDetailPage() {
             </div>
           </div>
 
-          {isVoteCreator && (
+          {isVoteCreator && vote.is_active && (
             <div className="flex items-center space-x-4">
-              {vote.is_active && (
-                <>
-                  <button
-                    onClick={() => setShowAddOptionModal(true)}
-                    className="flex items-center rounded-md bg-gray-100 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
-                  >
-                    <PlusIcon className="mr-2 h-4 w-4" />
-                    選択肢を追加
-                  </button>
-                  <button
-                    onClick={handleCloseVote}
-                    disabled={closeVoteMutation.isPending}
-                    className="flex items-center rounded-md bg-yellow-600 px-4 py-2 text-sm text-white hover:bg-yellow-700"
-                  >
-                    <StopIcon className="mr-2 h-4 w-4" />
-                    投票を終了
-                  </button>
-                </>
-              )}
+              <button
+                onClick={handleAddAllWorksAsOptions}
+                className="flex cursor-pointer items-center rounded-md bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"
+              >
+                <PlusIcon className="mr-2 h-4 w-4" />
+                作品を一括追加
+              </button>
+              <button
+                onClick={() => setShowConfirmModal(true)}
+                disabled={closeVoteMutation.isPending}
+                className="flex cursor-pointer items-center rounded-md bg-yellow-600 px-4 py-2 text-sm text-white hover:bg-yellow-700"
+              >
+                <StopIcon className="mr-2 h-4 w-4" />
+                投票を終了
+              </button>
               <button
                 onClick={openEditModal}
-                className="flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                className="flex cursor-pointer items-center rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
               >
                 <ChartBarIcon className="mr-2 h-4 w-4" />
                 編集
@@ -288,76 +305,188 @@ export default function VoteDetailPage() {
         </div>
       </div>
 
-      {/* 投票選択肢 */}
-      <div className="space-y-4">
-        {sortedOptions.map((option, index) => {
-          const percentage = getPercentage(option.vote_count);
-          const isVoted = userVotedOptionIds.includes(option.id);
+      {/* 順位表示 */}
+      {!vote.is_active && (
+        <div className="mb-8">
+          <h2 className="mb-4 text-2xl font-bold">投票結果</h2>
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                  >
+                    順位
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                  >
+                    作品
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                  >
+                    得票数
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                  >
+                    割合
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {worksWithVotes.map((workData, index) => (
+                  <tr
+                    key={workData.work.id}
+                    className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-bold">{workData.rank}位</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
+                          {workData.work.thumbnail_url ? (
+                            <Image
+                              src={workData.work.thumbnail_url}
+                              alt={workData.work.title}
+                              width={40}
+                              height={40}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-6 w-6 text-gray-400"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <div className="ml-4">
+                          <Link
+                            href={`/artworks/${workData.work.id}`}
+                            className="font-medium text-blue-600 hover:underline"
+                          >
+                            {workData.work.title}
+                          </Link>
+                          <div className="text-sm text-gray-500">{workData.work.user.nickname}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{workData.voteCount}票</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{workData.percentage}%</div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
+      {/* 作品カードグリッド - すべての選択肢を表示 */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        {worksWithVotes.map((workData, index) => {
           return (
             <motion.div
-              key={option.id}
+              key={workData.work.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: index * 0.05 }}
-              className="relative"
             >
               <div
-                className={`rounded-lg border p-4 transition-all ${
-                  vote.is_active
-                    ? 'cursor-pointer hover:border-blue-500 hover:shadow-sm'
-                    : 'cursor-not-allowed opacity-75'
-                } ${isVoted ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'}`}
-                onClick={vote.is_active ? () => handleVote(option.id) : undefined}
+                className={`h-full overflow-hidden rounded-lg border shadow transition-all ${
+                  vote.is_active && workData.option
+                    ? 'cursor-pointer hover:border-blue-500 hover:shadow-md'
+                    : 'cursor-default'
+                } ${workData.isVoted ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'}`}
+                onClick={
+                  vote.is_active && workData.option
+                    ? () => handleVote(workData.option?.id || 0)
+                    : undefined
+                }
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
-                        isVoted ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
-                      }`}
-                    >
-                      {isVoted && <CheckIcon className="h-4 w-4 text-white" />}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{option.option_text}</p>
-                      {option.work && (
-                        <Link
-                          href={`/artworks/${option.work.id}`}
-                          className="text-sm text-blue-600 hover:underline"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          作品を表示
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">
-                        {option.vote_count}票 ({percentage}%)
-                      </p>
-                    </div>
-                    {isVoteCreator && vote.is_active && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveOption(option.id);
-                        }}
-                        className="rounded-md p-2 text-red-600 hover:bg-red-50"
-                        title="選択肢を削除"
+                <div className="relative h-40 w-full bg-gray-100">
+                  {workData.work.thumbnail_url ? (
+                    <Image
+                      src={workData.work.thumbnail_url}
+                      alt={workData.work.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  ) : (
+                    <div className="flex h-40 w-full items-center justify-center bg-gray-100">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="h-12 w-12 text-gray-400"
                       >
-                        <XMarkIcon className="h-4 w-4" />
-                      </button>
-                    )}
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+                        />
+                      </svg>
+                    </div>
+                  )}
+
+                  {workData.isVoted && (
+                    <div className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500">
+                      <CheckIcon className="h-5 w-5 text-white" />
+                    </div>
+                  )}
+
+                  <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                    <span className="text-lg font-bold text-white">{workData.percentage}%</span>
                   </div>
+
+                  {!vote.is_active && (
+                    <div className="absolute top-2 left-2 flex h-8 min-w-8 items-center justify-center rounded-full bg-yellow-500 px-2">
+                      <span className="text-sm font-bold text-white">{workData.rank}位</span>
+                    </div>
+                  )}
                 </div>
-                {/* プログレスバー */}
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-200">
-                  <div
-                    className={`h-full rounded-full ${isVoted ? 'bg-blue-500' : 'bg-gray-400'}`}
-                    style={{ width: `${percentage}%` }}
-                  />
+
+                <div className="p-4">
+                  <div className="mb-2">
+                    <h3 className="line-clamp-1 font-medium text-gray-900">
+                      {workData.work.title}
+                    </h3>
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>{workData.voteCount}票</span>
+                    <Link
+                      href={`/artworks/${workData.work.id}`}
+                      className="text-blue-600 hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      作品を表示
+                    </Link>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -379,96 +508,9 @@ export default function VoteDetailPage() {
         </div>
       )}
 
-      {/* 危険な操作 */}
-      {isVoteCreator && (
-        <div className="mt-12 border-t border-gray-200 pt-8">
-          <h3 className="mb-4 text-sm font-medium text-gray-900">危険な操作</h3>
-          <button
-            onClick={handleDeleteVote}
-            disabled={deleteVoteMutation.isPending}
-            className="flex items-center rounded-md bg-red-100 px-4 py-2 text-red-700 hover:bg-red-200"
-          >
-            <TrashIcon className="mr-2 h-4 w-4" />
-            投票を削除
-          </button>
-        </div>
-      )}
-
-      {/* 選択肢追加モーダル */}
-      {showAddOptionModal && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
-          <div className="w-full max-w-md rounded-lg bg-white p-6">
-            <h2 className="mb-4 text-xl font-bold">選択肢を追加</h2>
-            <form onSubmit={handleAddOption}>
-              <div className="mb-4">
-                <label
-                  htmlFor="option-text"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
-                  選択肢テキスト <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="option-text"
-                  value={newOptionText}
-                  onChange={(e) => setNewOptionText(e.target.value)}
-                  className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:outline-none"
-                  required
-                />
-              </div>
-              <div className="mb-6">
-                <label
-                  htmlFor="option-work"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
-                  関連作品（任意）
-                </label>
-                <select
-                  id="option-work"
-                  value={newOptionWorkId || ''}
-                  onChange={(e) =>
-                    setNewOptionWorkId(e.target.value ? parseInt(e.target.value) : null)
-                  }
-                  className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:outline-none"
-                >
-                  <option value="">作品を選択...</option>
-                  {works && works.length > 0 ? (
-                    works.map((work) => (
-                      <option key={work.id} value={work.id}>
-                        {work.title}
-                      </option>
-                    ))
-                  ) : (
-                    <option value="" disabled>
-                      作品がありません
-                    </option>
-                  )}
-                </select>
-              </div>
-              <div className="flex justify-end space-x-4">
-                <button
-                  type="button"
-                  onClick={() => setShowAddOptionModal(false)}
-                  className="rounded-md bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
-                >
-                  キャンセル
-                </button>
-                <button
-                  type="submit"
-                  disabled={addOptionMutation.isPending}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
-                >
-                  {addOptionMutation.isPending ? '追加中...' : '追加'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       {/* 投票編集モーダル */}
       {showEditModal && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-white p-6">
             <h2 className="mb-4 text-xl font-bold">投票を編集</h2>
             <form onSubmit={handleUpdateVote}>
@@ -531,6 +573,17 @@ export default function VoteDetailPage() {
           </div>
         </div>
       )}
+
+      {/* 投票終了確認モーダル */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleCloseVote}
+        title="投票を終了しますか？"
+        description="この投票を終了すると、新たな投票ができなくなります。この操作は取り消せません。"
+        confirmText="投票を終了"
+        isPending={closeVoteMutation.isPending}
+      />
     </div>
   );
 }

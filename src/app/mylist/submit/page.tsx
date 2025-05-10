@@ -38,7 +38,6 @@ export default function SubmitWorkPage() {
 
   // ファイル関連の状態
   const [file, setFile] = useState<File | null>(null);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
@@ -55,13 +54,6 @@ export default function SubmitWorkPage() {
     setFile(selectedFile);
 
     if (selectedFile) {
-      // プレビュー用のURL生成
-      const fileReader = new FileReader();
-      fileReader.onload = () => {
-        setFilePreview(fileReader.result as string);
-      };
-      fileReader.readAsDataURL(selectedFile);
-
       // PDEファイルの場合はコードを読み込む
       if (selectedFile.name.endsWith('.pde')) {
         const codeReader = new FileReader();
@@ -70,8 +62,6 @@ export default function SubmitWorkPage() {
         };
         codeReader.readAsText(selectedFile);
       }
-    } else {
-      setFilePreview(null);
     }
   };
 
@@ -529,7 +519,7 @@ export default function SubmitWorkPage() {
                   type="button"
                   onClick={executePreview}
                   disabled={isSubmitting || !isScriptLoaded || !codeContent.trim()}
-                  className="flex items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
+                  className="flex cursor-pointer items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
                 >
                   <PlayIcon className="mr-2 h-5 w-5" />
                   {isSubmitting
@@ -568,7 +558,7 @@ export default function SubmitWorkPage() {
                     <button
                       type="button"
                       onClick={() => setShowJsCode(!showJsCode)}
-                      className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                      className="cursor-pointer rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
                     >
                       {showJsCode ? 'コードを隠す' : 'コードを表示'}
                     </button>
@@ -690,7 +680,7 @@ export default function SubmitWorkPage() {
             <button
               type="submit"
               disabled={uploadMutation.isPending}
-              className="rounded-md bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:bg-indigo-400"
+              className="cursor-pointer rounded-md bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:bg-indigo-400"
             >
               {uploadMutation.isPending ? 'アップロード中...' : '作品を投稿する'}
             </button>

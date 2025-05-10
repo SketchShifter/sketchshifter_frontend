@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth-store';
 import { AuthApi } from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import { LoginInput, RegisterInput, AuthUser } from '@/types/dataTypes';
+import { LoginInput, RegisterInput } from '@/types/dataTypes';
 import { toast } from 'react-toastify';
 
 // ログインフック

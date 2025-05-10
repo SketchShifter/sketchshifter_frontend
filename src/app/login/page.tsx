@@ -107,7 +107,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500"
+                  className="absolute inset-y-0 right-0 flex cursor-pointer items-center px-3 text-gray-500"
                 >
                   {showPassword ? (
                     <EyeSlashIcon className="h-5 w-5" />
@@ -147,7 +147,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loginMutation.isPending}
-                className="w-full rounded-md bg-gray-700 px-4 py-3 text-white shadow-sm hover:bg-black focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none disabled:opacity-70"
+                className="w-full cursor-pointer rounded-md bg-gray-700 px-4 py-3 text-white shadow-sm hover:bg-black focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none disabled:opacity-70"
               >
                 {loginMutation.isPending ? 'ログイン中...' : 'ログイン'}
               </button>

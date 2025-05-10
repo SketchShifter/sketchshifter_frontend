@@ -321,14 +321,14 @@ export default function PDEPage() {
           <div className="flex w-full flex-row justify-center gap-4">
             <button
               onClick={runCompiler}
-              className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+              className="cursor-pointer rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
               disabled={!isScriptLoaded}
             >
               {isScriptLoaded ? 'コンパイル＆実行' : 'スクリプト読み込み中...'}
             </button>
             <button
               onClick={() => setShowDebug(!showDebug)}
-              className="rounded-md bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
+              className="cursor-pointer rounded-md bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
             >
               {showDebug ? 'デバッグ情報を隠す' : 'デバッグ情報表示'}
             </button>

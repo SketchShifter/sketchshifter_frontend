@@ -28,6 +28,7 @@ import { formatDate } from '@/lib/formatDate';
 import WorksCard from '@/components/workscard';
 import { workToCardProps } from '@/types/dataTypes';
 import { motion } from 'framer-motion';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 export default function TaskDetailPage() {
   const params = useParams();
@@ -43,6 +44,7 @@ export default function TaskDetailPage() {
   const [voteTitle, setVoteTitle] = useState('');
   const [voteDescription, setVoteDescription] = useState('');
   const [isMultiSelect, setIsMultiSelect] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
 
   //   const { data: currentUser } = useCurrentUser();
   const { data: projectData } = useProject(projectId);
@@ -106,9 +108,8 @@ export default function TaskDetailPage() {
 
   // タスク削除ハンドラー
   const handleDeleteTask = async () => {
-    if (confirm('このタスクを削除しますか？この操作は取り消せません。')) {
-      await deleteTaskMutation.mutateAsync();
-    }
+    await deleteTaskMutation.mutateAsync();
+    setShowDeleteConfirmModal(false);
   };
 
   // 投票作成ハンドラー
@@ -177,14 +178,14 @@ export default function TaskDetailPage() {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setShowVoteModal(true)}
-                className="flex items-center rounded-md bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"
+                className="flex cursor-pointer items-center rounded-md bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"
               >
                 <ChartBarIcon className="mr-2 h-4 w-4" />
                 投票を作成
               </button>
               <button
                 onClick={openEditModal}
-                className="flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                className="flex cursor-pointer items-center rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
               >
                 <PencilIcon className="mr-2 h-4 w-4" />
                 編集
@@ -199,7 +200,7 @@ export default function TaskDetailPage() {
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('works')}
-            className={`border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
+            className={`cursor-pointer border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
               activeTab === 'works'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
@@ -210,7 +211,7 @@ export default function TaskDetailPage() {
           </button>
           <button
             onClick={() => setActiveTab('votes')}
-            className={`border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
+            className={`cursor-pointer border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
               activeTab === 'votes'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
@@ -219,9 +220,9 @@ export default function TaskDetailPage() {
             <ChartBarIcon className="mr-2 inline h-4 w-4" />
             投票 ({votes.length})
           </button>
-          <button
+          {/* <button
             onClick={() => setActiveTab('comments')}
-            className={`border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
+            className={`cursor-pointer border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
               activeTab === 'comments'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
@@ -229,7 +230,7 @@ export default function TaskDetailPage() {
           >
             <ChatBubbleLeftEllipsisIcon className="mr-2 inline h-4 w-4" />
             コメント
-          </button>
+          </button> */}
         </nav>
       </div>
 
@@ -240,7 +241,7 @@ export default function TaskDetailPage() {
           <div className="mb-6 flex justify-end">
             <Link
               href={`/mylist/submit?task=${taskId}`}
-              className="flex items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              className="flex cursor-pointer items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
             >
               <PlusIcon className="mr-2 h-4 w-4" />
               作品を追加
@@ -255,7 +256,7 @@ export default function TaskDetailPage() {
               <p className="mb-4 text-gray-600">最初の作品を追加してください。</p>
               <Link
                 href={`/mylist/submit?task=${taskId}`}
-                className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                className="flex cursor-pointer items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
               >
                 <PlusIcon className="mr-2 h-4 w-4" />
                 作品を追加
@@ -289,7 +290,7 @@ export default function TaskDetailPage() {
               {isTaskOwner && (
                 <button
                   onClick={() => setShowVoteModal(true)}
-                  className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+                  className="flex cursor-pointer items-center rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700"
                 >
                   <ChartBarIcon className="mr-2 h-4 w-4" />
                   投票を作成
@@ -369,7 +370,7 @@ export default function TaskDetailPage() {
               </div>
               <button
                 type="submit"
-                className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                className="flex cursor-pointer items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
               >
                 投稿する
               </button>
@@ -393,9 +394,9 @@ export default function TaskDetailPage() {
         <div className="mt-12 border-t border-gray-200 pt-8">
           <h3 className="mb-4 text-sm font-medium text-gray-900">危険な操作</h3>
           <button
-            onClick={handleDeleteTask}
+            onClick={() => setShowDeleteConfirmModal(true)}
             disabled={deleteTaskMutation.isPending}
-            className="flex items-center rounded-md bg-red-100 px-4 py-2 text-red-700 hover:bg-red-200"
+            className="flex cursor-pointer items-center rounded-md bg-red-100 px-4 py-2 text-red-700 hover:bg-red-200"
           >
             <TrashIcon className="mr-2 h-4 w-4" />
             タスクを削除
@@ -405,7 +406,7 @@ export default function TaskDetailPage() {
 
       {/* タスク編集モーダル */}
       {showEditModal && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-white p-6">
             <h2 className="mb-4 text-xl font-bold">タスク編集</h2>
             <form onSubmit={handleUpdateTask}>
@@ -441,14 +442,14 @@ export default function TaskDetailPage() {
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="rounded-md bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
+                  className="cursor-pointer rounded-md bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
                 >
                   キャンセル
                 </button>
                 <button
                   type="submit"
                   disabled={updateTaskMutation.isPending}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
+                  className="cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
                 >
                   {updateTaskMutation.isPending ? '更新中...' : '更新'}
                 </button>
@@ -460,7 +461,7 @@ export default function TaskDetailPage() {
 
       {/* 投票作成モーダル */}
       {showVoteModal && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-white p-6">
             <h2 className="mb-4 text-xl font-bold">投票を作成</h2>
             <form onSubmit={handleCreateVote}>
@@ -507,14 +508,14 @@ export default function TaskDetailPage() {
                 <button
                   type="button"
                   onClick={() => setShowVoteModal(false)}
-                  className="rounded-md bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
+                  className="cursor-pointer rounded-md bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
                 >
                   キャンセル
                 </button>
                 <button
                   type="submit"
                   disabled={createVoteMutation.isPending}
-                  className="rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:bg-green-300"
+                  className="cursor-pointer rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:bg-green-300"
                 >
                   {createVoteMutation.isPending ? '作成中...' : '作成'}
                 </button>
@@ -523,6 +524,17 @@ export default function TaskDetailPage() {
           </div>
         </div>
       )}
+
+      {/* タスク削除確認モーダル */}
+      <ConfirmModal
+        isOpen={showDeleteConfirmModal}
+        onClose={() => setShowDeleteConfirmModal(false)}
+        onConfirm={handleDeleteTask}
+        title="タスクを削除しますか？"
+        description="このタスクを削除すると、関連するすべてのデータが削除されます。この操作は取り消せません。"
+        confirmText="削除する"
+        isPending={deleteTaskMutation.isPending}
+      />
     </div>
   );
 }

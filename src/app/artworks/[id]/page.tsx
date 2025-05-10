@@ -273,7 +273,7 @@ export default function ArtworkDetailPage() {
             <button
               onClick={toggleLike}
               disabled={likeMutation.isPending}
-              className={`flex items-center rounded-md px-4 py-2 text-sm font-medium ${
+              className={`flex cursor-pointer items-center rounded-md px-4 py-2 text-sm font-medium ${
                 likeMutation.isPending
                   ? 'cursor-wait bg-gray-200 text-gray-500'
                   : liked
@@ -370,7 +370,7 @@ export default function ArtworkDetailPage() {
             <button
               onClick={executeProcessingCode}
               disabled={isProcessing || !isScriptLoaded}
-              className="flex items-center rounded-lg bg-blue-600 px-5 py-2.5 text-center text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none disabled:bg-blue-300"
+              className="flex cursor-pointer items-center rounded-lg bg-blue-600 px-5 py-2.5 text-center text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none disabled:bg-blue-300"
             >
               <PlayIcon className="h-5 w-5 md:mr-2" />
               <span>
@@ -396,7 +396,7 @@ export default function ArtworkDetailPage() {
               <button
                 onClick={toggleLike}
                 disabled={likeMutation.isPending}
-                className={`flex items-center rounded-md px-4 py-2 text-sm font-medium ${
+                className={`flex cursor-pointer items-center rounded-md px-4 py-2 text-sm font-medium ${
                   likeMutation.isPending
                     ? 'cursor-wait bg-gray-200 text-gray-500'
                     : liked
@@ -429,7 +429,7 @@ export default function ArtworkDetailPage() {
                 <h2 className="text-lg font-medium text-gray-900">プレビュー</h2>
                 <button
                   onClick={() => setIsFullscreen(!isFullscreen)}
-                  className="flex items-center rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                  className="flex cursor-pointer items-center rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
                 >
                   {isFullscreen ? (
                     <>
@@ -510,7 +510,7 @@ export default function ArtworkDetailPage() {
                   <button
                     type="button"
                     onClick={() => setIsCodeVisible(!isCodeVisible)}
-                    className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                    className="cursor-pointer rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
                   >
                     {isCodeVisible ? 'コードを隠す' : 'コードを表示'}
                   </button>
@@ -552,7 +552,7 @@ export default function ArtworkDetailPage() {
                   <button
                     type="button"
                     onClick={() => setShowJsCode(!showJsCode)}
-                    className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                    className="cursor-pointer rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
                   >
                     {showJsCode ? 'コードを隠す' : 'コードを表示'}
                   </button>
@@ -656,7 +656,7 @@ export default function ArtworkDetailPage() {
               <button
                 type="submit"
                 disabled={commentMutation.isPending || !commentText.trim()}
-                className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
+                className="cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
               >
                 {commentMutation.isPending ? '送信中...' : '投稿する'}
               </button>
@@ -668,7 +668,7 @@ export default function ArtworkDetailPage() {
         {showScrollToTop && (
           <button
             onClick={scrollToTop}
-            className="fixed right-6 bottom-6 rounded-full bg-blue-500 p-3 text-white shadow-lg transition hover:bg-blue-600 focus:outline-none"
+            className="fixed right-6 bottom-6 cursor-pointer rounded-full bg-blue-500 p-3 text-white shadow-lg transition hover:bg-blue-600 focus:outline-none"
             aria-label="ページの一番上に戻る"
           >
             <ChevronUpIcon className="h-6 w-6" />

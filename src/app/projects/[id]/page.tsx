@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   PlusIcon,
@@ -14,6 +14,7 @@ import {
   ListBulletIcon,
   CalendarIcon,
   XMarkIcon,
+  ArrowLeftIcon,
 } from '@heroicons/react/24/outline';
 import {
   useProject,
@@ -28,10 +29,11 @@ import {
 import { useCurrentUser } from '@/hooks/use-auth';
 import { formatDate } from '@/lib/formatDate';
 import { motion } from 'framer-motion';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 export default function ProjectDetailPage() {
   const params = useParams();
-  const router = useRouter();
+  // const router = useRouter();
   const projectId = parseInt(params.id as string);
   const [activeTab, setActiveTab] = useState<'tasks' | 'members'>('tasks');
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -43,8 +45,11 @@ export default function ProjectDetailPage() {
   const [copiedInvite, setCopiedInvite] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [invitationCode, setInvitationCode] = useState('');
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [showRemoveMemberModal, setShowRemoveMemberModal] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<number | null>(null);
 
-  const { data: currentUser } = useCurrentUser();
+  const { user: currentUser } = useCurrentUser();
   const { data: projectData, isLoading } = useProject(projectId);
   const { data: tasksData } = useProjectTasks(projectId);
   const { data: membersData } = useProjectMembers(projectId);
@@ -158,25 +163,43 @@ export default function ProjectDetailPage() {
 
   // メンバー削除ハンドラー
   const handleRemoveMember = async (memberId: number) => {
-    if (confirm('このメンバーをプロジェクトから削除しますか？')) {
-      await removeMemberMutation.mutateAsync(memberId);
+    setMemberToRemove(memberId);
+    setShowRemoveMemberModal(true);
+  };
+
+  const handleConfirmRemoveMember = async () => {
+    if (memberToRemove) {
+      await removeMemberMutation.mutateAsync(memberToRemove);
+      setShowRemoveMemberModal(false);
+      setMemberToRemove(null);
     }
   };
 
   // プロジェクト削除ハンドラー
   const handleDeleteProject = async () => {
-    if (confirm('このプロジェクトを削除しますか？この操作は取り消せません。')) {
-      await deleteProjectMutation.mutateAsync();
-    }
+    await deleteProjectMutation.mutateAsync();
+    setShowDeleteConfirmModal(false);
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* パンくずナビ */}
+      <nav className="mb-8 flex text-sm text-gray-500">
+        <Link href="/projects" className="hover:text-gray-700">
+          プロジェクト
+        </Link>
+        <span className="mx-2">/</span>
+        <span className="text-gray-900">{project.title}</span>
+      </nav>
+
       {/* ヘッダー */}
       <div className="mb-8 rounded-lg bg-white p-6 shadow-sm">
         <div className="flex items-start justify-between">
           <div>
             <div className="mb-4 flex items-center space-x-4">
+              <Link href="/projects" className="text-gray-400 hover:text-gray-600">
+                <ArrowLeftIcon className="h-5 w-5" />
+              </Link>
               <h1 className="text-3xl font-bold">{project.title}</h1>
               {isOwner && (
                 <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
@@ -204,7 +227,7 @@ export default function ProjectDetailPage() {
                 <button
                   onClick={handleShowInvitation}
                   disabled={generateInvitationMutation.isPending}
-                  className="flex items-center rounded-md bg-gray-100 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
+                  className="flex cursor-pointer items-center rounded-md bg-gray-100 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
                 >
                   {copiedInvite ? (
                     <CheckIcon className="mr-2 h-4 w-4 text-green-600" />
@@ -215,7 +238,7 @@ export default function ProjectDetailPage() {
                 </button>
                 <button
                   onClick={openEditModal}
-                  className="flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                  className="flex cursor-pointer items-center rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
                 >
                   <PencilIcon className="mr-2 h-4 w-4" />
                   編集
@@ -231,7 +254,7 @@ export default function ProjectDetailPage() {
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('tasks')}
-            className={`border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
+            className={`cursor-pointer border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
               activeTab === 'tasks'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
@@ -242,7 +265,7 @@ export default function ProjectDetailPage() {
           </button>
           <button
             onClick={() => setActiveTab('members')}
-            className={`border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
+            className={`cursor-pointer border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
               activeTab === 'members'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
@@ -276,7 +299,7 @@ export default function ProjectDetailPage() {
               <p className="mb-4 text-gray-600">最初のタスクを作成してください。</p>
               <button
                 onClick={() => setShowTaskModal(true)}
-                className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                className="cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
               >
                 タスクを作成
               </button>
@@ -353,7 +376,7 @@ export default function ProjectDetailPage() {
                     {isOwner && !member.is_owner && (
                       <button
                         onClick={() => handleRemoveMember(member.user_id)}
-                        className="rounded-md p-2 text-red-600 hover:bg-red-50"
+                        className="cursor-pointer rounded-md p-2 text-red-600 hover:bg-red-50"
                         title="メンバーを削除"
                       >
                         <TrashIcon className="h-4 w-4" />
@@ -372,9 +395,9 @@ export default function ProjectDetailPage() {
         <div className="mt-12 border-t border-gray-200 pt-8">
           <h3 className="mb-4 text-sm font-medium text-gray-900">危険な操作</h3>
           <button
-            onClick={handleDeleteProject}
+            onClick={() => setShowDeleteConfirmModal(true)}
             disabled={deleteProjectMutation.isPending}
-            className="flex items-center rounded-md bg-red-100 px-4 py-2 text-red-700 hover:bg-red-200"
+            className="flex cursor-pointer items-center rounded-md bg-red-100 px-4 py-2 text-red-700 hover:bg-red-200"
           >
             <TrashIcon className="mr-2 h-4 w-4" />
             プロジェクトを削除
@@ -382,9 +405,20 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
+      {/* プロジェクト削除確認モーダル */}
+      <ConfirmModal
+        isOpen={showDeleteConfirmModal}
+        onClose={() => setShowDeleteConfirmModal(false)}
+        onConfirm={handleDeleteProject}
+        title="プロジェクトを削除しますか？"
+        description="このプロジェクトを削除すると、関連するすべてのデータが削除されます。この操作は取り消せません。"
+        confirmText="削除する"
+        isPending={deleteProjectMutation.isPending}
+      />
+
       {/* タスク作成モーダル */}
       {showTaskModal && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-white p-6">
             <h2 className="mb-4 text-xl font-bold">新しいタスク</h2>
             <form onSubmit={handleCreateTask}>
@@ -420,14 +454,14 @@ export default function ProjectDetailPage() {
                 <button
                   type="button"
                   onClick={() => setShowTaskModal(false)}
-                  className="rounded-md bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
+                  className="cursor-pointer rounded-md bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
                 >
                   キャンセル
                 </button>
                 <button
                   type="submit"
                   disabled={createTaskMutation.isPending}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
+                  className="cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
                 >
                   {createTaskMutation.isPending ? '作成中...' : '作成'}
                 </button>
@@ -439,7 +473,7 @@ export default function ProjectDetailPage() {
 
       {/* プロジェクト編集モーダル */}
       {showEditModal && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-white p-6">
             <h2 className="mb-4 text-xl font-bold">プロジェクト編集</h2>
             <form onSubmit={handleUpdateProject}>
@@ -475,14 +509,14 @@ export default function ProjectDetailPage() {
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="rounded-md bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
+                  className="cursor-pointer rounded-md bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
                 >
                   キャンセル
                 </button>
                 <button
                   type="submit"
                   disabled={updateProjectMutation.isPending}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
+                  className="cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
                 >
                   {updateProjectMutation.isPending ? '更新中...' : '更新'}
                 </button>
@@ -494,13 +528,14 @@ export default function ProjectDetailPage() {
 
       {/* 招待コードモーダル */}
       {showInviteModal && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-white p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-bold">メンバーを招待</h2>
               <button
+                title="閉じる"
                 onClick={() => setShowInviteModal(false)}
-                className="p-2 text-gray-400 hover:text-gray-600"
+                className="cursor-pointer p-2 text-gray-400 hover:text-gray-600"
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>
@@ -515,7 +550,7 @@ export default function ProjectDetailPage() {
                 <code className="font-mono text-lg text-blue-600">{invitationCode}</code>
                 <button
                   onClick={handleCopyInvitation}
-                  className={`ml-4 flex items-center rounded px-3 py-1 text-sm ${
+                  className={`ml-4 flex cursor-pointer items-center rounded px-3 py-1 text-sm ${
                     copiedInvite
                       ? 'bg-green-100 text-green-700'
                       : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
@@ -549,13 +584,13 @@ export default function ProjectDetailPage() {
               <button
                 onClick={handleRegenerateInvitation}
                 disabled={generateInvitationMutation.isPending}
-                className="flex-1 rounded-md bg-gray-100 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 disabled:bg-gray-50"
+                className="flex-1 cursor-pointer rounded-md bg-gray-100 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 disabled:bg-gray-50"
               >
                 {generateInvitationMutation.isPending ? '生成中...' : '新しいコードを生成'}
               </button>
               <button
                 onClick={() => setShowInviteModal(false)}
-                className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                className="flex-1 cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
               >
                 閉じる
               </button>
@@ -563,6 +598,20 @@ export default function ProjectDetailPage() {
           </div>
         </div>
       )}
+
+      {/* メンバー削除確認モーダル */}
+      <ConfirmModal
+        isOpen={showRemoveMemberModal}
+        onClose={() => {
+          setShowRemoveMemberModal(false);
+          setMemberToRemove(null);
+        }}
+        onConfirm={handleConfirmRemoveMember}
+        title="メンバーを削除しますか？"
+        description="このメンバーをプロジェクトから削除します。この操作は取り消せません。"
+        confirmText="削除する"
+        isPending={removeMemberMutation.isPending}
+      />
     </div>
   );
 }
