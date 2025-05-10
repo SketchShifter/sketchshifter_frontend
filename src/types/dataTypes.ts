@@ -78,6 +78,9 @@ export interface AuthUser {
   nickname: string;
   email: string;
   role?: string;
+  bio?: string;
+  avatar_url?: string;
+  created_at?: string;
 }
 
 export interface AuthResponse {

@@ -46,6 +46,7 @@ export default function ArtworkDetailPage() {
   const [isPreviewActive, setIsPreviewActive] = useState<boolean>(false);
   const [commentText, setCommentText] = useState<string>('');
   const [guestNickname, setGuestNickname] = useState<string>('');
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.serendicode-sub.click';
 
@@ -243,7 +244,7 @@ export default function ArtworkDetailPage() {
         onError={() => setError('スクリプト読み込みエラー')}
       />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="mx-auto px-4 py-8">
         {/* 作品ヘッダー: タイトル、作者、統計情報 */}
         <div className="mb-6 rounded-lg bg-white p-6 shadow-md">
           <h1 className="mb-3 text-3xl font-bold text-gray-900">{work.title}</h1>
@@ -418,41 +419,86 @@ export default function ArtworkDetailPage() {
         )}
 
         {/* プレビューエリア */}
-        <div className="mb-8 rounded-lg bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-medium text-gray-900">プレビュー</h2>
-          <div className="flex aspect-video w-full items-center justify-center rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-inner transition-all">
-            {isPreviewActive ? (
-              <canvas
-                id="canvas"
-                key={canvasKey}
-                width="600"
-                height="400"
-                className="border border-gray-300"
-              ></canvas>
-            ) : (
-              <div className="flex flex-col items-center justify-center text-center text-gray-500">
-                <PlayIcon className="mb-2 h-12 w-12" />
-                <p className="text-lg">
-                  「スケッチを実行」ボタンをクリックして
-                  <br />
-                  プレビューを表示してください
-                </p>
+        <div
+          className={`grid gap-6 ${isFullscreen ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-12'}`}
+        >
+          {/* 左側: プレビューエリア */}
+          <div className={isFullscreen ? 'w-full' : 'lg:col-span-7'}>
+            <div className="mb-8 rounded-lg bg-white p-6 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-medium text-gray-900">プレビュー</h2>
+                <button
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  className="flex items-center rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                >
+                  {isFullscreen ? (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="mr-2 h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M5 4a1 1 0 00-1 1v4a1 1 0 01-2 0V5a3 3 0 013-3h4a1 1 0 010 2H5zm10 0a1 1 0 011 1v4a1 1 0 11-2 0V5a1 1 0 011-1zm-1 10a1 1 0 011 1v4a3 3 0 01-3 3h-4a1 1 0 110-2h4a1 1 0 011-1v-4a1 1 0 011-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      全画面解除
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="mr-2 h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 11-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      全画面表示
+                    </>
+                  )}
+                </button>
               </div>
-            )}
+              <div className="flex aspect-video w-full items-center justify-center rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-inner transition-all">
+                {isPreviewActive ? (
+                  <canvas
+                    id="canvas"
+                    key={canvasKey}
+                    width="600"
+                    height="400"
+                    className="border border-gray-300"
+                  ></canvas>
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-center text-gray-500">
+                    <PlayIcon className="mb-2 h-12 w-12" />
+                    <p className="text-lg">
+                      「スケッチを実行」ボタンをクリックして
+                      <br />
+                      プレビューを表示してください
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
+                <p className="font-medium">使い方:</p>
+                <ol className="mt-2 ml-5 list-decimal">
+                  <li>上部の「スケッチを実行」ボタンをクリックしてプレビューを表示</li>
+                  <li>プレビューが表示されない場合は、コードを確認してください</li>
+                </ol>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
-            <p className="font-medium">使い方:</p>
-            <ol className="mt-2 ml-5 list-decimal">
-              <li>上部の「スケッチを実行」ボタンをクリックしてプレビューを表示</li>
-              <li>プレビューが表示されない場合は、コードを確認してください</li>
-            </ol>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          {/* 左側: コード表示エリア - 5/12 */}
-          <div className="lg:col-span-5">
+          {/* 右側: ソースコードエリア */}
+          <div className={isFullscreen ? 'w-full' : 'lg:col-span-5'}>
             {/* PDEコード表示 */}
             {processingWork && processingWork.pde_content && (
               <div className="mb-6 rounded-lg bg-white p-6 shadow-sm">
@@ -494,10 +540,7 @@ export default function ArtworkDetailPage() {
                 )}
               </div>
             )}
-          </div>
 
-          {/* 右側: JS表示エリア - 7/12 */}
-          <div className="lg:col-span-7">
             {/* 変換されたJSコード（表示/非表示切り替え可能） */}
             {jsCode ? (
               <div className="mb-6 rounded-lg bg-white p-6 shadow-sm">

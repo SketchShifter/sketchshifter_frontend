@@ -9,6 +9,7 @@ import { useMyWorks } from '@/hooks/use-work-hooks';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { useAuthStore } from '@/store/auth-store';
 import { CardProps } from '@/components/workscard';
+import { motion } from 'framer-motion';
 
 // マイリスト用のカードコンポーネント（編集リンク付き）
 const MyWorkCard: React.FC<CardProps> = ({
@@ -159,18 +160,24 @@ export default function MyListPage() {
 
       {works && works.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {works.map((work) => (
-            <MyWorkCard
+          {works.map((work, index) => (
+            <motion.div
               key={work.id}
-              id={work.id}
-              title={work.title}
-              date={work.created_at}
-              description={work.description}
-              username={work.user?.nickname || 'Unknown'}
-              thumbnail={work.thumbnail_url || '/placeholder-image.jpg'}
-              views={work.views}
-              likes_count={work.likes_count}
-            />
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+            >
+              <MyWorkCard
+                id={work.id}
+                title={work.title}
+                date={work.created_at}
+                description={work.description}
+                username={work.user?.nickname || 'Unknown'}
+                thumbnail={work.thumbnail_url || '/placeholder-image.jpg'}
+                views={work.views}
+                likes_count={work.likes_count}
+              />
+            </motion.div>
           ))}
         </div>
       ) : (
