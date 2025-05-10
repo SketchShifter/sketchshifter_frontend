@@ -3,21 +3,16 @@
 import { useState, useRef, ChangeEvent, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { toast } from 'react-toastify';
 import { useCurrentUser } from '@/hooks/use-auth';
-import { useMutation } from '@tanstack/react-query';
-import { useAuthStore } from '@/store/auth-store';
 import Script from 'next/script';
 import { setupCanvasUtils, compileAndRun } from '@/lib/processing-utils';
 import { PlayIcon } from '@heroicons/react/24/outline';
+import { useCreateWork } from '@/hooks/use-work-hooks';
 
 export default function SubmitWorkPage() {
   const router = useRouter();
   const { isAuthenticated, isAuthReady } = useCurrentUser();
-
-  // API URLの設定
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.serendicode-sub.click';
 
   // フックを早期リターンの前に移動
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,24 +20,20 @@ export default function SubmitWorkPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
 
-  // 認証ストアからトークン取得
-  const token = useAuthStore((state) => state.token);
-
   // 認証チェックを行う
   useEffect(() => {
     // 認証の準備が完了していて、かつ認証されていない場合のみリダイレクト
-    if (isAuthReady && (!isAuthenticated || !token)) {
+    if (isAuthReady && !isAuthenticated) {
       // 認証されていない場合、ログインページにリダイレクト
       router.push('/login?redirect=/mylist/submit');
     }
-  }, [isAuthenticated, token, router, isAuthReady]);
+  }, [isAuthenticated, router, isAuthReady]);
 
   // フォームの状態
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState('');
-  // const [codeShared, setCodeShared] = useState(true);
-  const codeShared = true;
+  const codeShared = true; // 常にtrueに設定
   const [codeContent, setCodeContent] = useState('');
 
   // ファイル関連の状態
@@ -56,49 +47,7 @@ export default function SubmitWorkPage() {
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
   // TanStack Queryを使ったファイルアップロードミューテーション
-  const uploadMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      if (!token) {
-        throw new Error('認証が必要です。再度ログインしてください。');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/works`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        // 401エラーの場合は再ログインを促す
-        if (response.status === 401) {
-          throw new Error('認証の有効期限が切れています。再度ログインしてください。');
-        }
-        throw new Error(errorData.error || 'アップロードに失敗しました');
-      }
-
-      return await response.json();
-    },
-    onSuccess: (data) => {
-      setSuccess('作品が正常にアップロードされました！');
-      toast.success('作品が正常にアップロードされました！');
-      // 成功した場合、詳細ページにリダイレクト
-      setTimeout(() => {
-        router.push(`/artworks/${data.work.id}`);
-      }, 1500);
-    },
-    onError: (error) => {
-      if (error instanceof Error) {
-        setError(error.message);
-        toast.error(error.message);
-      } else {
-        setError('サーバー接続エラー');
-        toast.error('サーバー接続エラー');
-      }
-    },
-  });
+  const uploadMutation = useCreateWork();
 
   // ファイル選択ハンドラー
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -152,49 +101,23 @@ export default function SubmitWorkPage() {
     thumbnailInputRef.current?.click();
   };
 
-  // Cloudinaryに直接アップロードする関数
-  const uploadToCloudinary = async (
-    file: File,
-    isImage: boolean = true,
-    quality: number = 75
-  ): Promise<{ public_id: string; secure_url: string }> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('folder', 'sketchshifter');
-    formData.append('resource_type', isImage ? 'image' : 'raw');
-    formData.append('quality', quality.toString());
-
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error('アップロードに失敗しました');
-    }
-
-    const data = await response.json();
-    console.log(`${file.name} のアップロード結果:`, data);
-    return data;
-  };
-
   // フォーム送信ハンドラー
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!isAuthenticated || !token) {
+    if (!isAuthenticated) {
       setError('ログインが必要です。再度ログインしてください。');
       router.push('/login?redirect=/mylist/submit');
       return;
     }
 
-    if (!file) {
-      setError('ファイルを選択してください');
+    if (!title.trim()) {
+      setError('タイトルを入力してください');
       return;
     }
 
-    if (!title.trim()) {
-      setError('タイトルを入力してください');
+    if (!codeContent.trim()) {
+      setError('PDEコードを入力してください');
       return;
     }
 
@@ -204,65 +127,30 @@ export default function SubmitWorkPage() {
     setUploadProgress(0);
 
     try {
-      // Step 1: ファイルをCloudinaryにアップロード
-      setUploadProgress(10);
-
-      // PDEファイルの場合は別の処理を行う
-      const isPDE = file.name.endsWith('.pde');
-
-      // アップロード結果を保持する変数
-      let fileData = null;
-      let thumbnailData = null;
-
-      // ファイルのアップロード（PDEファイル以外）
-      if (!isPDE) {
-        // PDEファイル以外は画像としてCloudinaryにアップロード
-        fileData = await uploadToCloudinary(file, true, 75);
-        setUploadProgress(50);
-      }
-
-      // サムネイルがある場合はCloudinaryにアップロード
-      if (thumbnail) {
-        thumbnailData = await uploadToCloudinary(thumbnail, true, 70);
-        setUploadProgress(70);
-      }
-
-      // Step 2: バックエンドAPIに作品情報を送信
-      setUploadProgress(80);
-
-      // FormDataの作成
+      // FormDataの作成（OpenAPI仕様に合わせて修正）
       const formData = new FormData();
+
+      // 必須フィールド
       formData.append('title', title);
-      formData.append('description', description);
+      formData.append('pde_content', codeContent);
+
+      // オプションフィールド
+      if (description) formData.append('description', description);
+      if (tags) formData.append('tags', tags);
       formData.append('code_shared', codeShared.toString());
-      formData.append('code_content', codeContent);
-      formData.append('tags', tags);
 
-      // PDEファイルの場合は直接アップロード
-      if (isPDE) {
-        formData.append('file', file);
-      } else if (fileData) {
-        // CloudinaryのURLとIDを送信
-        formData.append('file_url', fileData.secure_url);
-        formData.append('file_public_id', fileData.public_id);
-        formData.append('file_type', file.type);
-        formData.append('file_name', file.name);
-      }
-
-      // サムネイル情報
-      if (thumbnailData) {
-        formData.append('thumbnail_url', thumbnailData.secure_url);
-        formData.append('thumbnail_public_id', thumbnailData.public_id);
-        formData.append('thumbnail_type', thumbnail?.type || '');
+      // サムネイル（任意）
+      if (thumbnail) {
+        formData.append('thumbnail', thumbnail);
       }
 
       // TanStack Queryミューテーションを使用してアップロード
-      uploadMutation.mutate(formData);
+      await uploadMutation.mutateAsync(formData);
       setUploadProgress(100);
     } catch (error) {
       console.error('アップロード中にエラーが発生しました:', error);
-      setError('サーバー接続エラー');
-      toast.error('サーバー接続エラー');
+      setError('アップロードに失敗しました');
+      toast.error('アップロードに失敗しました');
     } finally {
       setIsSubmitting(false);
     }
@@ -361,7 +249,7 @@ export default function SubmitWorkPage() {
   }
 
   // 認証が完了していても認証されていない場合は何も表示しない（リダイレクト中）
-  if (!isAuthenticated || !token) {
+  if (!isAuthenticated) {
     return null;
   }
 
@@ -421,7 +309,7 @@ export default function SubmitWorkPage() {
           </div>
         )}
 
-        {isSubmitting && (
+        {uploadMutation.isPending && (
           <div className="mb-6">
             <div className="mb-2 flex justify-between">
               <span className="text-sm font-medium text-gray-700">アップロード中...</span>
@@ -459,28 +347,18 @@ export default function SubmitWorkPage() {
               >
                 {file ? (
                   <div className="flex flex-col items-center">
-                    {filePreview && !file.name.endsWith('.pde') ? (
-                      <Image
-                        src={filePreview}
-                        alt="プレビュー"
-                        width={300}
-                        height={200}
-                        className="max-h-32 max-w-full rounded object-contain"
+                    <svg
+                      className="h-12 w-12 text-indigo-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"
+                        clipRule="evenodd"
                       />
-                    ) : (
-                      <svg
-                        className="h-12 w-12 text-indigo-500"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
+                    </svg>
                     <span className="mt-2 block text-sm font-medium text-gray-900">
                       {file.name}
                     </span>
@@ -533,7 +411,7 @@ export default function SubmitWorkPage() {
                 {thumbnail ? (
                   <div className="flex flex-col items-center">
                     {thumbnailPreview && (
-                      <Image
+                      <img
                         src={thumbnailPreview}
                         alt="サムネイルプレビュー"
                         width={300}
@@ -574,7 +452,7 @@ export default function SubmitWorkPage() {
             </div>
           </div>
 
-          {/* プレビューエリア - 新規追加 */}
+          {/* プレビューエリア */}
           {file && file.name.endsWith('.pde') && (
             <div className="space-y-6 rounded-lg border border-gray-200 p-6">
               <div className="flex items-center justify-between">
@@ -692,24 +570,24 @@ export default function SubmitWorkPage() {
             {/* コード共有オプション (PDEファイルの場合) */}
             {file && file.name.endsWith('.pde') && (
               <div>
-                {/* <div className="flex items-center">
+                <div className="flex items-center">
                   <input
                     type="checkbox"
                     id="codeShared"
                     checked={codeShared}
-                    onChange={(e) => setCodeShared(e.target.checked)}
+                    disabled={true} // 常にtrueなので無効化
                     className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                   />
                   <label
                     htmlFor="codeShared"
                     className="ml-2 block text-sm font-medium text-gray-700"
                   >
-                    コードを公開する
+                    コードを公開する（必須）
                   </label>
                 </div>
                 <p className="mt-1 text-xs text-gray-500">
-                  チェックを入れると、他のユーザーがあなたのコードを閲覧できるようになります
-                </p> */}
+                  コードは常に公開されます。これによって他のユーザーがあなたのコードを学習できます
+                </p>
 
                 {codeShared && (
                   <div className="mt-3">
@@ -717,7 +595,7 @@ export default function SubmitWorkPage() {
                       htmlFor="codeContent"
                       className="mb-1 block text-sm font-medium text-gray-700"
                     >
-                      コード内容
+                      コード内容 <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       id="codeContent"
@@ -725,6 +603,7 @@ export default function SubmitWorkPage() {
                       onChange={(e) => setCodeContent(e.target.value)}
                       rows={10}
                       className="block w-full rounded-lg border border-gray-300 p-2.5 font-mono text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      required
                     ></textarea>
                   </div>
                 )}
@@ -742,10 +621,10 @@ export default function SubmitWorkPage() {
             </Link>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={uploadMutation.isPending}
               className="rounded-md bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:bg-indigo-400"
             >
-              {isSubmitting ? 'アップロード中...' : '作品を投稿する'}
+              {uploadMutation.isPending ? 'アップロード中...' : '作品を投稿する'}
             </button>
           </div>
         </form>

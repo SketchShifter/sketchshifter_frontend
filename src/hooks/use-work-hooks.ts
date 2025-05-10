@@ -7,17 +7,15 @@ import { useEffect } from 'react';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { toast } from 'react-toastify';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.serendicode-sub.click';
-
 // クエリキーを一箇所で定義
 export const workQueryKeys = {
   works: ['works'] as const,
-  work: (id: string) => ['work', id] as const,
-  userWorks: (userId: string, page: number, limit: number) =>
-    ['user-works', userId, page, limit] as const,
+  work: (id: string | number) => ['work', String(id)] as const,
+  userWorks: (userId: string | number, page: number, limit: number) =>
+    ['user-works', String(userId), page, limit] as const,
   myWorks: ['my-works'] as const,
-  comments: (workId: string) => ['comments', workId] as const,
-  likes: (workId: string) => ['like-status', workId] as const,
+  comments: (workId: string | number) => ['comments', String(workId)] as const,
+  likes: (workId: string | number) => ['like-status', String(workId)] as const,
 };
 
 /**
@@ -26,7 +24,7 @@ export const workQueryKeys = {
  */
 export function useWorks(params?: SearchParams) {
   return useQuery({
-    queryKey: workQueryKeys.works,
+    queryKey: [...workQueryKeys.works, params],
     queryFn: async () => {
       return await WorksApi.getWorks(params);
     },
@@ -38,17 +36,14 @@ export function useWorks(params?: SearchParams) {
  * 作品データを取得するフック
  * @param id 作品ID
  */
-export function useWork(id: string) {
+export function useWork(id: string | number) {
   const { token } = useAuthStore();
 
   return useQuery({
     queryKey: workQueryKeys.work(id),
     queryFn: async () => {
       const data = await WorksApi.getWork(id, token || undefined);
-      return {
-        work: data.work,
-        processingWork: data.processing_work || data.work?.processing_work || null,
-      };
+      return data;
     },
   });
 }
@@ -59,7 +54,7 @@ export function useWork(id: string) {
  * @param page ページ番号
  * @param limit 1ページあたりの表示件数
  */
-export function useUserWorks(userId: string, page: number = 1, limit: number = 20) {
+export function useUserWorks(userId: string | number, page: number = 1, limit: number = 20) {
   const { token } = useAuthStore();
 
   return useQuery({
@@ -76,7 +71,7 @@ export function useUserWorks(userId: string, page: number = 1, limit: number = 2
  */
 export function useMyWorks() {
   const { token, isAuthenticated } = useAuthStore();
-  const { isAuthReady } = useCurrentUser();
+  const { isAuthReady, user } = useCurrentUser();
   const router = useRouter();
 
   // ユーザーがログインしていない場合、ログインページにリダイレクト
@@ -88,27 +83,22 @@ export function useMyWorks() {
   }, [isAuthenticated, token, router, isAuthReady]);
 
   return useQuery({
-    queryKey: workQueryKeys.myWorks,
+    queryKey: [...workQueryKeys.myWorks, token],
     queryFn: async () => {
-      if (!token) {
+      if (!token || !user?.id) {
         throw new Error('認証が必要です');
       }
 
-      const response = await fetch(`${API_BASE_URL}/users/my-works`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '作品の取得に失敗しました');
-      }
-
-      const data = await response.json();
-      return data.works as Work[];
+      // 現在のユーザーIDを使用して作品一覧を取得
+      const data = await WorksApi.getUserWorks(user.id, 1, 100, token);
+      return {
+        works: data.works,
+        total: data.total,
+        pages: data.pages,
+        page: data.page,
+      };
     },
-    enabled: !!token && isAuthenticated,
+    enabled: !!token && isAuthenticated && !!user?.id,
     staleTime: 30 * 60 * 1000, // 30分間キャッシュ
   });
 }
@@ -117,7 +107,7 @@ export function useMyWorks() {
  * コメントを取得するフック
  * @param workId 作品ID
  */
-export function useComments(workId: string) {
+export function useComments(workId: string | number) {
   return useQuery({
     queryKey: workQueryKeys.comments(workId),
     queryFn: async () => {
@@ -131,7 +121,7 @@ export function useComments(workId: string) {
  * いいね状態を取得するフック
  * @param workId 作品ID
  */
-export function useLikeStatus(workId: string) {
+export function useLikeStatus(workId: string | number) {
   const { token, isAuthenticated } = useAuthStore();
 
   return useQuery({
@@ -157,9 +147,10 @@ export function useLikeStatus(workId: string) {
 export function useLikeToggle() {
   const { token } = useAuthStore();
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   return useMutation({
-    mutationFn: async ({ workId, liked }: { workId: string; liked: boolean }) => {
+    mutationFn: async ({ workId, liked }: { workId: string | number; liked: boolean }) => {
       if (!token) {
         throw new Error('ログインが必要です');
       }
@@ -174,6 +165,15 @@ export function useLikeToggle() {
       // クエリを無効化して再フェッチを促す
       queryClient.invalidateQueries({ queryKey: workQueryKeys.likes(variables.workId) });
       queryClient.invalidateQueries({ queryKey: workQueryKeys.work(variables.workId) });
+      queryClient.invalidateQueries({ queryKey: workQueryKeys.works });
+    },
+    onError: (error) => {
+      if (error instanceof Error && error.message === 'ログインが必要です') {
+        toast.error('ログインが必要です。');
+        router.push('/login');
+      } else {
+        toast.error('エラーが発生しました。');
+      }
     },
   });
 }
@@ -192,26 +192,27 @@ export function useLikeWork() {
         throw new Error('ログインが必要です');
       }
 
-      const response = await fetch(`${API_BASE_URL}/works/${String(workId)}/like`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      // いいね状態を確認
+      const likeStatus = await WorksApi.getLikeStatus(workId, token);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'いいね処理に失敗しました');
+      // いいね状態に応じて追加または削除
+      if (likeStatus.liked) {
+        return await WorksApi.removeLike(workId, token);
+      } else {
+        return await WorksApi.addLike(workId, token);
       }
-
-      return await response.json();
     },
     onSuccess: (data, workId) => {
       // 関連するデータのキャッシュを更新
-      queryClient.invalidateQueries({ queryKey: workQueryKeys.work(String(workId)) });
+      queryClient.invalidateQueries({ queryKey: workQueryKeys.work(workId) });
+      queryClient.invalidateQueries({ queryKey: workQueryKeys.likes(workId) });
       queryClient.invalidateQueries({ queryKey: workQueryKeys.works });
-      toast.success('いいねしました！');
+
+      // いいね数を表示するために toastを調整
+      const message = data.likes_count
+        ? `いいねしました！（${data.likes_count}）`
+        : 'いいねを取り消しました';
+      toast.success(message);
     },
     onError: (error) => {
       if (error instanceof Error) {
@@ -236,13 +237,134 @@ export function useAddComment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ workId, commentData }: { workId: string; commentData: CommentInput }) => {
+    mutationFn: async ({
+      workId,
+      commentData,
+    }: {
+      workId: string | number;
+      commentData: CommentInput;
+    }) => {
       return await WorksApi.addComment(workId, commentData, token || undefined);
     },
     onSuccess: (data, variables) => {
       // コメントクエリとワーククエリを更新
       queryClient.invalidateQueries({ queryKey: workQueryKeys.comments(variables.workId) });
       queryClient.invalidateQueries({ queryKey: workQueryKeys.work(variables.workId) });
+    },
+  });
+}
+
+/**
+ * 作品をアップロードするフック
+ */
+export function useCreateWork() {
+  const { token } = useAuthStore();
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async (formData: FormData) => {
+      if (!token) {
+        throw new Error('認証が必要です');
+      }
+      return await WorksApi.createWork(formData, token);
+    },
+    onSuccess: (data) => {
+      // 成功メッセージを表示
+      toast.success('作品をアップロードしました');
+
+      // キャッシュを更新
+      queryClient.invalidateQueries({ queryKey: workQueryKeys.works });
+      queryClient.invalidateQueries({ queryKey: workQueryKeys.myWorks });
+
+      // 作品詳細ページにリダイレクト
+      if (data && data.work && data.work.id) {
+        router.push(`/artworks/${data.work.id}`);
+      } else {
+        console.error('レスポンスにwork.idが含まれていません', data);
+        router.push('/mylist');
+      }
+    },
+    onError: (error) => {
+      if (error instanceof Error) {
+        toast.error(`エラー: ${error.message}`);
+      } else {
+        toast.error('作品のアップロードに失敗しました');
+      }
+    },
+  });
+}
+
+/**
+ * 作品を更新するフック
+ */
+export function useUpdateWork() {
+  const { token } = useAuthStore();
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async ({ workId, formData }: { workId: string | number; formData: FormData }) => {
+      if (!token) {
+        throw new Error('認証が必要です');
+      }
+      return await WorksApi.updateWork(workId, formData, token);
+    },
+    onSuccess: (data, variables) => {
+      // 成功メッセージを表示
+      toast.success('作品を更新しました');
+
+      // キャッシュを更新
+      queryClient.invalidateQueries({ queryKey: workQueryKeys.work(variables.workId) });
+      queryClient.invalidateQueries({ queryKey: workQueryKeys.works });
+      queryClient.invalidateQueries({ queryKey: workQueryKeys.myWorks });
+
+      // 作品詳細ページにリダイレクト
+      router.push(`/artworks/${variables.workId}`);
+    },
+    onError: (error) => {
+      if (error instanceof Error) {
+        toast.error(`エラー: ${error.message}`);
+      } else {
+        toast.error('作品の更新に失敗しました');
+      }
+    },
+  });
+}
+
+/**
+ * 作品を削除するフック
+ */
+export function useDeleteWork() {
+  const { token } = useAuthStore();
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async (workId: string | number) => {
+      if (!token) {
+        throw new Error('認証が必要です');
+      }
+      return await WorksApi.deleteWork(workId, token);
+    },
+    onSuccess: (data, workId) => {
+      // 成功メッセージを表示
+      toast.success('作品を削除しました');
+
+      // キャッシュを更新
+      queryClient.invalidateQueries({ queryKey: workQueryKeys.works });
+      queryClient.invalidateQueries({ queryKey: workQueryKeys.myWorks });
+      queryClient.removeQueries({ queryKey: workQueryKeys.work(workId) });
+
+      // マイリストページにリダイレクト
+      router.push('/mylist');
+    },
+    onError: (error) => {
+      if (error instanceof Error) {
+        toast.error(`エラー: ${error.message}`);
+      } else {
+        toast.error('作品の削除に失敗しました');
+      }
     },
   });
 }

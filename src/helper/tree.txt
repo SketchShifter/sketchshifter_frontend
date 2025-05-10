@@ -1,5 +1,3 @@
-/src $ tree
-.
 ├── app
 │   ├── api
 │   │   ├── [...route]
@@ -10,17 +8,15 @@
 │   │   ├── [id]
 │   │   │   └── page.tsx
 │   │   └── page.tsx
+│   ├── contact
+│   │   └── page.tsx
 │   ├── favicon.ico
 │   ├── globals.css
-│   ├── guests
-│   │   ├── preview
-│   │   │   └── page.tsx
-│   │   └── submit
-│   │       └── page.tsx
 │   ├── layout.tsx
 │   ├── login
 │   │   ├── page.tsx
 │   │   └── reset
+│   │       ├── Reset.tsx
 │   │       └── page.tsx
 │   ├── mylist
 │   │   ├── edit
@@ -30,28 +26,31 @@
 │   │   └── submit
 │   │       └── page.tsx
 │   ├── page.tsx
-│   ├── pde
-│   │   ├── page.tsx
-│   │   └── test1
-│   │       └── page.tsx
 │   ├── preview
 │   │   └── page.tsx
-│   └── register
-│       └── page.tsx
+│   ├── privacy
+│   │   └── page.tsx
+│   ├── projects
+│   │   ├── [id]
+│   │   │   ├── page.tsx
+│   │   │   └── tasks
+│   │   │       └── [taskId]
+│   │   │           ├── page.tsx
+│   │   │           └── votes
+│   │   │               └── [voteId]
+│   │   │                   └── page.tsx
+│   │   └── page.tsx
+│   ├── register
+│   │   └── page.tsx
+│   ├── terms
+│   │   └── page.tsx
+│   └── users
+│       └── [userId]
+│           └── page.tsx
 ├── components
 │   ├── Footer
 │   │   └── Footer.tsx
-│   ├── artwork
-│   │   └── ArtWorks.tsx
-│   ├── auth
-│   │   ├── Login.tsx
-│   │   ├── Register.tsx
-│   │   └── Reset.tsx
 │   ├── home-gallery.tsx
-│   ├── pde
-│   │   ├── PDEEditor.tsx
-│   │   ├── ProcessingCanvas.tsx
-│   │   └── samplePDEs1.pde
 │   ├── top
 │   │   └── Top.tsx
 │   ├── topbar.tsx
@@ -103,18 +102,28 @@
 │   │   ├── toggle.tsx
 │   │   └── tooltip.tsx
 │   └── workscard.tsx
-├── context
-│   └── auth-provider.tsx
+├── helper
+│   ├── openapi.yaml
+│   └── tree.txt
 ├── hooks
-│   └── use-mobile.ts
+│   ├── use-auth.ts
+│   ├── use-mobile.ts
+│   ├── use-project-hooks.ts
+│   └── use-work-hooks.ts
 ├── lib
 │   ├── api.ts
-│   ├── auth.ts
 │   ├── formatDate.ts
 │   ├── processing-utils.ts
+│   ├── project-api.ts
 │   └── utils.ts
+├── providers
+│   └── query-provider.tsx
+├── scripts
+│   └── create-structure.sh
+├── store
+│   └── auth-store.ts
 └── types
-    ├── dataType.ts
+    ├── dataTypes.ts
     └── global-types.ts
 
-31 directories, 86 files
+37 directories, 91 files

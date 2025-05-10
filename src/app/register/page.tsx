@@ -27,7 +27,7 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterInput) => {
     try {
       await registerMutation.mutateAsync(data);
-      toast.success('アカウントが作成されました！');
+      // toast.success('アカウントが作成されました！');
     } catch (error) {
       if (error instanceof Error) {
         toast.error(`登録失敗: ${error.message}`);

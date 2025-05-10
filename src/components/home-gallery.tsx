@@ -25,13 +25,12 @@ export default function HomeGallery({ data }: HomeGalleryProps) {
     );
   }
 
-  // 人気作品（とりあえず最初の3つを表示）
-  // 実際には likes_count や views などでソートするとよい
+  // 人気作品（likes_countでソート）
   const popularWorks = [...data.works]
     .sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0))
     .slice(0, 8);
 
-  // 最新作品（作成日順に並べ替え）
+  // 最新作品（created_atでソート）
   const recentWorks = [...data.works]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 8);

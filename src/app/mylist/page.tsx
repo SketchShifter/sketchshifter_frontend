@@ -7,8 +7,7 @@ import { HeartIcon, EyeIcon, PencilIcon } from '@heroicons/react/24/outline';
 import { formatDate } from '@/lib/formatDate';
 import { useMyWorks } from '@/hooks/use-work-hooks';
 import { useCurrentUser } from '@/hooks/use-auth';
-import { useAuthStore } from '@/store/auth-store';
-import { CardProps } from '@/components/workscard';
+import { CardProps } from '@/types/dataTypes';
 import { motion } from 'framer-motion';
 
 // マイリスト用のカードコンポーネント（編集リンク付き）
@@ -18,7 +17,7 @@ const MyWorkCard: React.FC<CardProps> = ({
   date,
   description,
   username,
-  thumbnail,
+  thumbnail_url,
   views = 0,
   likes_count = 0,
 }) => {
@@ -46,9 +45,9 @@ const MyWorkCard: React.FC<CardProps> = ({
     <div className="h-full overflow-hidden rounded-lg bg-white shadow-md transition-shadow hover:shadow-lg">
       <Link href={`/artworks/${id}`} className="group">
         <div className="relative h-48 w-full">
-          {thumbnail ? (
+          {thumbnail_url ? (
             <Image
-              src={thumbnail}
+              src={thumbnail_url}
               alt={title}
               width={400}
               height={200}
@@ -96,9 +95,8 @@ const MyWorkCard: React.FC<CardProps> = ({
 };
 
 export default function MyListPage() {
-  const { data: works, isLoading, error } = useMyWorks();
+  const { data: worksData, isLoading, error } = useMyWorks();
   const { isAuthReady, isAuthenticated } = useCurrentUser();
-  const token = useAuthStore((state) => state.token);
 
   // 認証チェックが完了していない場合はローディング表示
   if (!isAuthReady) {
@@ -113,7 +111,7 @@ export default function MyListPage() {
   }
 
   // 認証されていない場合は何も表示しない（リダイレクト中）
-  if (!isAuthenticated || !token) {
+  if (!isAuthenticated) {
     return null;
   }
 
@@ -146,6 +144,8 @@ export default function MyListPage() {
     );
   }
 
+  const works = worksData?.works || [];
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
@@ -173,7 +173,7 @@ export default function MyListPage() {
                 date={work.created_at}
                 description={work.description}
                 username={work.user?.nickname || 'Unknown'}
-                thumbnail={work.thumbnail_url || '/placeholder-image.jpg'}
+                thumbnail_url={work.thumbnail_url || ''}
                 views={work.views}
                 likes_count={work.likes_count}
               />

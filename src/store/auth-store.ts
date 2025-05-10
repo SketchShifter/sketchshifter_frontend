@@ -6,7 +6,8 @@ type User = {
   name: string;
   nickname: string;
   email: string;
-  role?: string;
+  bio?: string;
+  avatar_url?: string;
 };
 
 type AuthState = {

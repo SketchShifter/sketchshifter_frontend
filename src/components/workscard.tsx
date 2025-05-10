@@ -1,25 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { HeartIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { formatDate } from '@/lib/formatDate';
-import { useLikeWork } from '@/hooks/use-work-hooks';
+import { useLikeStatus, useLikeToggle } from '@/hooks/use-work-hooks';
 import { useCurrentUser } from '@/hooks/use-auth';
-
-// Workから必要なプロパティを取り出して表示用に最適化したインターフェース
-export interface CardProps {
-  id: string | number;
-  title: string;
-  date: string; // created_atの別名
-  description: string;
-  username: string; // user.nicknameの別名
-  thumbnail: string; // thumbnail_urlの別名
-  views?: number;
-  likes_count?: number;
-}
+import { CardProps } from '@/types/dataTypes';
 
 const WorksCard: React.FC<CardProps> = ({
   id,
@@ -27,17 +16,26 @@ const WorksCard: React.FC<CardProps> = ({
   date,
   description,
   username,
-  thumbnail,
+  thumbnail_url,
   views = 0,
   likes_count = 0,
 }) => {
+  // いいね状態をAPIから取得
+  const { data: likeStatus } = useLikeStatus(id);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(likes_count);
 
   // TanStack Queryのミューテーションを使用
-  const likeMutation = useLikeWork();
+  const likeMutation = useLikeToggle();
   // 認証状態を確認
   const { isAuthenticated } = useCurrentUser();
+
+  // いいね状態が変更されたときにUIを更新
+  useEffect(() => {
+    if (likeStatus) {
+      setLiked(likeStatus.liked);
+    }
+  }, [likeStatus]);
 
   // サムネイルのフォールバックコンポーネント
   const ThumbnailFallback = () => (
@@ -64,17 +62,20 @@ const WorksCard: React.FC<CardProps> = ({
     e.preventDefault(); // 親のリンク遷移を防ぐ
 
     if (!isAuthenticated) {
-      // useCurrentUserから取得した認証状態を利用
       return;
     }
 
     try {
       // TanStack Queryのミューテーションを実行
-      await likeMutation.mutateAsync(id);
+      const response = await likeMutation.mutateAsync({ workId: id, liked });
 
-      // UI状態を更新
-      setLiked(true);
-      setLikesCount((prev) => prev + 1);
+      // レスポンスに含まれるいいね数でUIを更新
+      if (response.likes_count !== undefined) {
+        setLikesCount(response.likes_count);
+      }
+
+      // いいね状態を切り替える（楽観的更新）
+      setLiked(!liked);
     } catch (error) {
       // エラー処理はミューテーションのonErrorで行われる
       console.error('いいね処理中にエラー:', error);
@@ -85,13 +86,12 @@ const WorksCard: React.FC<CardProps> = ({
     <Link href={`/artworks/${id}`} className="group">
       <div className="h-full overflow-hidden rounded-lg bg-white shadow-md transition-shadow hover:shadow-lg">
         <div className="relative h-48 w-full">
-          {thumbnail ? (
+          {thumbnail_url ? (
             <Image
-              src={thumbnail}
+              src={thumbnail_url}
               alt={title}
-              layout="fill"
-              objectFit="cover"
-              className="transition-transform group-hover:scale-105"
+              fill
+              className="object-cover transition-transform group-hover:scale-105"
             />
           ) : (
             <ThumbnailFallback />
@@ -114,7 +114,9 @@ const WorksCard: React.FC<CardProps> = ({
               <button
                 onClick={handleLike}
                 disabled={likeMutation.isPending}
-                className={`flex items-center text-sm ${liked ? 'text-pink-600' : 'text-gray-600'}`}
+                className={`flex items-center text-sm transition-colors ${
+                  liked ? 'text-pink-600' : 'text-gray-600'
+                } ${likeMutation.isPending ? 'opacity-50' : 'hover:text-pink-600'}`}
               >
                 {liked ? (
                   <HeartIconSolid className="mr-1 h-4 w-4" />

@@ -134,7 +134,9 @@ const TopBar = () => {
               <div className="flex flex-col items-center space-y-6 md:flex-row md:space-y-0 md:space-x-6">
                 <Button title="投稿" props={{ href: '/mylist/submit' }} />
                 <Button title="プレビュー" props={{ href: '/preview' }} />
-                <Button title="作品一覧" props={{ href: '/artworks' }} />
+                {/* <Button title="作品一覧" props={{ href: '/artworks' }} /> */}
+                {/* プロジェクト機能へのリンクを追加 */}
+                <Button title="プロジェクト" props={{ href: '/projects' }} />
                 <Button title="マイリスト" props={{ href: '/mylist' }} />
                 <button
                   className={`group relative w-full rounded-md border-b border-gray-700 px-5 py-3 text-white transition-all duration-300 hover:cursor-pointer hover:bg-gray-700 hover:text-gray-300 md:w-auto md:rounded-none md:border-none md:p-0 md:hover:bg-transparent`}
@@ -153,7 +155,7 @@ const TopBar = () => {
             <>
               <div className="flex flex-col items-center space-y-6 md:flex-row md:space-y-0 md:space-x-6">
                 <Button title="プレビュー" props={{ href: '/preview' }} />
-                <Button title="作品一覧" props={{ href: '/artworks' }} />
+                {/* <Button title="作品一覧" props={{ href: '/artworks' }} /> */}
                 <Button title="ログイン" props={{ href: '/login' }} />
                 <Button title="アカウント登録" props={{ href: '/register' }} />
               </div>

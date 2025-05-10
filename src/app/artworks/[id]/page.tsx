@@ -61,7 +61,7 @@ export default function ArtworkDetailPage() {
   const commentMutation = useAddComment();
 
   const work = workData?.work;
-  const processingWork = workData?.processingWork;
+  const processingWork = workData?.work;
   const liked = likeStatus?.liked || false;
 
   // スクリプトの読み込み完了ハンドラー
@@ -500,7 +500,7 @@ export default function ArtworkDetailPage() {
           {/* 右側: ソースコードエリア */}
           <div className={isFullscreen ? 'w-full' : 'lg:col-span-5'}>
             {/* PDEコード表示 */}
-            {processingWork && processingWork.pde_content && (
+            {work && work.pde_content && work.code_shared && (
               <div className="mb-6 rounded-lg bg-white p-6 shadow-sm">
                 <div className="mb-3 flex items-center justify-between">
                   <h2 className="flex items-center text-lg font-medium text-gray-900">
@@ -519,10 +519,10 @@ export default function ArtworkDetailPage() {
                 {isCodeVisible && (
                   <div className="relative">
                     <pre className="max-h-96 overflow-auto rounded-lg bg-gray-900 p-4 text-sm text-gray-100">
-                      <code>{processingWork.pde_content}</code>
+                      <code>{work.pde_content}</code>
                     </pre>
                     <button
-                      onClick={() => navigator.clipboard.writeText(processingWork.pde_content)}
+                      onClick={() => navigator.clipboard.writeText(work.pde_content)}
                       className="absolute top-2 right-2 rounded bg-gray-700 p-2 text-white hover:bg-gray-600"
                       title="コピー"
                     >

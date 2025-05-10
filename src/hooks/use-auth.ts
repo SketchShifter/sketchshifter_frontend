@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth-store';
 import { AuthApi } from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import { LoginInput, RegisterInput } from '@/types/dataTypes';
+import { LoginInput, RegisterInput, AuthUser } from '@/types/dataTypes';
 import { toast } from 'react-toastify';
 
 // ログインフック
@@ -18,12 +18,13 @@ export function useLogin() {
     },
     onSuccess: (data) => {
       // 成功時にZustandストアにユーザー情報とトークンを保存
-      // 型変換して必要なプロパティを抽出
       login(data.token, {
         id: String(data.user.id),
         name: data.user.name,
         nickname: data.user.nickname,
         email: data.user.email || '',
+        bio: data.user.bio,
+        avatar_url: data.user.avatar_url,
       });
 
       // 成功メッセージをトースト表示
@@ -58,12 +59,13 @@ export function useRegister() {
     },
     onSuccess: (data) => {
       // 成功時にZustandストアにユーザー情報とトークンを保存
-      // 型変換して必要なプロパティを抽出
       login(data.token, {
         id: String(data.user.id),
         name: data.user.name,
         nickname: data.user.nickname,
         email: data.user.email || '',
+        bio: data.user.bio,
+        avatar_url: data.user.avatar_url,
       });
 
       // 成功メッセージをトースト表示
@@ -145,7 +147,14 @@ export function useCurrentUser() {
   // ユーザー情報が取得できたらZustandストアを更新
   useEffect(() => {
     if (data && token && !isAuthenticated) {
-      login(token, data);
+      login(token, {
+        id: String(data.id),
+        name: data.name,
+        nickname: data.nickname,
+        email: data.email || '',
+        bio: data.bio,
+        avatar_url: data.avatar_url,
+      });
     }
   }, [data, token, login, isAuthenticated]);
 
