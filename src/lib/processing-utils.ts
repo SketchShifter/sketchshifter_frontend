@@ -2,6 +2,32 @@
 
 type LogCallback = (message: string) => void;
 
+// グローバル状態を完全にクリーンアップする関数
+const cleanupGlobalState = () => {
+  // アニメーションループを停止
+  if (window.animationFrameId !== undefined) {
+    cancelAnimationFrame(window.animationFrameId);
+    window.animationFrameId = undefined;
+  }
+
+  // グローバル関数をクリア
+  window.runSetup = undefined;
+  window.runDraw = undefined;
+
+  // グローバル変数をクリア
+  window.canvas = undefined;
+  window.ctx = undefined;
+
+  // その他のグローバル変数もクリア
+  window.frameCount = 0;
+  window.mouseX = 0;
+  window.mouseY = 0;
+  window.pmouseX = 0;
+  window.pmouseY = 0;
+  window.keyIsPressed = false;
+  window.key = '';
+};
+
 // キャンバス初期化関数を設定
 export const setupCanvasUtils = (addLogMessage: LogCallback) => {
   // キャンバス初期化関数
@@ -71,6 +97,9 @@ export const setupCanvasUtils = (addLogMessage: LogCallback) => {
   // グローバルコード実行関数
   window.executeCode = (code: string) => {
     try {
+      // 既存の状態をクリーンアップ
+      cleanupGlobalState();
+
       // 安全に関数をスコープ内で実行
       new Function(code)();
 
@@ -95,7 +124,9 @@ export const setupCanvasUtils = (addLogMessage: LogCallback) => {
         }
       }, 100);
     } catch (error) {
-      addLogMessage(`コード実行エラー: ${(error as Error).message}`);
+      cleanupGlobalState();
+      addLogMessage(`実行エラー: ${(error as Error).message}`);
+      throw error;
     }
   };
 };
@@ -105,22 +136,11 @@ export const fullCanvasReset = (
   addLogMessage: LogCallback,
   setCanvasKey: (fn: (prev: number) => number) => void
 ) => {
-  // アニメーションループを停止
-  if (window.animationFrameId !== undefined) {
-    cancelAnimationFrame(window.animationFrameId);
-    window.animationFrameId = undefined;
-  }
-
-  // グローバル関数をクリア
-  window.runSetup = undefined;
-  window.runDraw = undefined;
+  // グローバル状態をクリーンアップ
+  cleanupGlobalState();
 
   // キャンバスを強制的に再作成するためにキーを更新
   setCanvasKey((prev) => prev + 1);
-
-  // グローバル参照をクリア
-  window.canvas = undefined;
-  window.ctx = undefined;
 
   addLogMessage('キャンバスを完全にクリーンアップしました');
 
@@ -194,45 +214,18 @@ export const compileAndRun = (
         if (window.executeCode) {
           window.executeCode(fullCode);
           addLogMessage('コードを実行しました');
-        } else {
-          try {
-            // 安全に関数をスコープ内で実行
-            new Function(fullCode)();
-            addLogMessage('コードを実行しました');
-
-            // セットアップと描画の実行
-            setTimeout(() => {
-              // セットアップを実行
-              if (typeof window.runSetup === 'function') {
-                window.runSetup();
-                addLogMessage('setup()を実行しました');
-              }
-
-              // 描画ループを開始
-              if (typeof window.runDraw === 'function') {
-                addLogMessage('描画ループを開始します');
-                const animate = () => {
-                  if (typeof window.runDraw === 'function') {
-                    window.runDraw();
-                    window.animationFrameId = requestAnimationFrame(animate);
-                  }
-                };
-                window.animationFrameId = requestAnimationFrame(animate);
-              }
-            }, 100);
-          } catch (execError) {
-            addLogMessage(`スクリプト実行エラー: ${(execError as Error).message}`);
-          }
         }
-      } catch (parseError) {
-        addLogMessage(`コンパイルエラー: ${(parseError as Error).message}`);
-        alert('コンパイル/実行エラーがあります: ' + (parseError as Error).message);
+      } catch (error) {
+        cleanupGlobalState();
+        addLogMessage(`コンパイル/実行エラー: ${(error as Error).message}`);
+        alert('コンパイル/実行エラーがあります: ' + (error as Error).message);
         setShowDebug(true);
       }
-    }, 100); // キャンバス再作成後に実行するための遅延
-  } catch (e: unknown) {
-    addLogMessage(`実行エラー: ${(e as Error).message}`);
-    alert('エラーがあります: ' + (e as Error).message);
+    }, 100);
+  } catch (error) {
+    cleanupGlobalState();
+    addLogMessage(`実行エラー: ${(error as Error).message}`);
+    alert('エラーがあります: ' + (error as Error).message);
     setShowDebug(true);
   }
 };

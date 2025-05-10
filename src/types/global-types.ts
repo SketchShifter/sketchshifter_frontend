@@ -16,5 +16,12 @@ declare global {
     setCanvasSize?: (width: number, height: number) => void;
     resetCanvas?: () => void;
     executeCode?: (code: string) => void;
+    frameCount: number;
+    mouseX: number;
+    mouseY: number;
+    pmouseX: number;
+    pmouseY: number;
+    keyIsPressed: boolean;
+    key: string;
   }
 }
