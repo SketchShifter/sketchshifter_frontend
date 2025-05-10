@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import Link from 'next/link';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 import { useLogin } from '@/hooks/use-auth';
 import type { LoginInput } from '@/types/dataTypes';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
@@ -24,7 +25,12 @@ export default function LoginPage() {
   return (
     <div className="flex h-screen w-full overflow-hidden">
       {/* 左側：画像エリア */}
-      <div className="relative hidden w-3/5 md:block">
+      <motion.div
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative hidden w-3/5 md:block"
+      >
         <Image
           src="/1037680.jpg"
           alt="グローバルネットワーク"
@@ -33,15 +39,31 @@ export default function LoginPage() {
           className="object-cover"
           sizes="(max-width: 1200px) 60vw, 50vw"
         />
-      </div>
+      </motion.div>
 
       {/* 右側：ログインフォーム */}
-      <div className="flex w-full flex-col justify-center bg-white px-6 py-12 md:w-2/5 md:px-12">
-        <div className="mx-auto w-full max-w-md">
+      <motion.div
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="flex w-full flex-col justify-center bg-white px-6 py-12 md:w-2/5 md:px-12"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="mx-auto w-full max-w-md"
+        >
           <h1 className="mb-2 text-3xl font-bold text-gray-900">ログイン</h1>
           <p className="mb-8 text-gray-600">アカウントにアクセスして続けましょう</p>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <motion.form
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-6"
+          >
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 メールアドレス
@@ -130,9 +152,14 @@ export default function LoginPage() {
                 {loginMutation.isPending ? 'ログイン中...' : 'ログイン'}
               </button>
             </div>
-          </form>
+          </motion.form>
 
-          <div className="mt-6 text-center">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+            className="mt-6 text-center"
+          >
             <p className="text-sm text-gray-600">
               アカウントをお持ちでないですか？{' '}
               <Link
@@ -142,7 +169,7 @@ export default function LoginPage() {
                 会員登録
               </Link>
             </p>
-          </div>
+          </motion.div>
 
           {loginMutation.isError && (
             <div className="mt-4 rounded-md bg-red-50 p-4">
@@ -169,8 +196,8 @@ export default function LoginPage() {
               </div>
             </div>
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

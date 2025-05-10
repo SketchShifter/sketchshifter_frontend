@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 import { useRegister } from '@/hooks/use-auth';
 import type { RegisterInput } from '@/types/dataTypes';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
@@ -39,7 +40,12 @@ export default function RegisterPage() {
   return (
     <div className="flex h-screen w-full overflow-hidden">
       {/* 左側：画像エリア */}
-      <div className="relative hidden w-3/5 md:block">
+      <motion.div
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative hidden w-3/5 md:block"
+      >
         <Image
           src="/1037680.jpg"
           alt="グローバルネットワーク"
@@ -48,15 +54,31 @@ export default function RegisterPage() {
           className="object-cover"
           sizes="(max-width: 1200px) 60vw, 50vw"
         />
-      </div>
+      </motion.div>
 
       {/* 右側：登録フォーム */}
-      <div className="flex w-full flex-col justify-center bg-white px-6 py-12 md:w-2/5 md:px-12">
-        <div className="mx-auto w-full max-w-md">
+      <motion.div
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="flex w-full flex-col justify-center bg-white px-6 py-12 md:w-2/5 md:px-12"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="mx-auto w-full max-w-md"
+        >
           <h1 className="mb-2 text-3xl font-bold text-gray-900">アカウント作成</h1>
           <p className="mb-8 text-gray-600">新規アカウントを作成して始めましょう</p>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <motion.form
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-4"
+          >
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 メールアドレス
@@ -190,9 +212,14 @@ export default function RegisterPage() {
                 {registerMutation.isPending ? '登録中...' : 'アカウント作成'}
               </button>
             </div>
-          </form>
+          </motion.form>
 
-          <div className="mt-6 text-center">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+            className="mt-6 text-center"
+          >
             <p className="text-sm text-gray-600">
               すでにアカウントをお持ちですか？{' '}
               <Link
@@ -202,7 +229,7 @@ export default function RegisterPage() {
                 ログイン
               </Link>
             </p>
-          </div>
+          </motion.div>
 
           {registerMutation.isError && (
             <div className="mt-4 rounded-md bg-red-50 p-4">
@@ -229,8 +256,8 @@ export default function RegisterPage() {
               </div>
             </div>
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
