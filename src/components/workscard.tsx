@@ -92,6 +92,13 @@ const WorksCard: React.FC<CardProps> = ({
               alt={title}
               fill
               className="object-cover transition-transform group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              unoptimized={true} // Cloudinaryで既に最適化済み
+              onError={(e) => {
+                console.error('Image load error:', thumbnail_url);
+                // エラー時はフォールバックに切り替え
+                e.currentTarget.style.display = 'none';
+              }}
             />
           ) : (
             <ThumbnailFallback />

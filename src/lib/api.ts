@@ -163,12 +163,29 @@ export const WorksApi = {
   createWork: (formData: FormData, token: string) => {
     console.log('API createWork called with FormData:', formData);
 
-    // FormDataの内容をログに出力
+    // FormDataの内容をログに出力とJSONオブジェクトに変換
     console.log('FormData contents:');
+    const jsonData: Record<string, string | boolean | string[]> = {};
     for (const pair of formData.entries()) {
       console.log(
         `${pair[0]}: ${pair[1] instanceof File ? `File: ${pair[1].name} (${pair[1].type})` : pair[1]}`
       );
+      // File以外のデータをJSONオブジェクトに追加
+      if (!(pair[1] instanceof File)) {
+        // code_sharedはboolean型に変換
+        if (pair[0] === 'code_shared') {
+          jsonData[pair[0]] = pair[1] === 'true';
+        }
+        // tagsはカンマ区切りの文字列から配列に変換
+        else if (pair[0] === 'tags' && typeof pair[1] === 'string') {
+          jsonData[pair[0]] = pair[1]
+            .split(',')
+            .map((tag) => tag.trim())
+            .filter((tag) => tag);
+        } else {
+          jsonData[pair[0]] = pair[1];
+        }
+      }
     }
 
     // FormDataを使用するためfetchApiではなく直接fetchを使用
@@ -178,9 +195,9 @@ export const WorksApi = {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
-            // Content-Typeはブラウザが自動的に設定するため省略
+            'Content-Type': 'application/json',
           },
-          body: formData,
+          body: JSON.stringify(jsonData),
         });
 
         if (!response.ok) {

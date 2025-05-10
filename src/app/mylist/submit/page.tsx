@@ -101,6 +101,54 @@ export default function SubmitWorkPage() {
     thumbnailInputRef.current?.click();
   };
 
+  // Cloudinaryに直接アップロードする関数
+  const uploadToCloudinary = async (
+    file: File,
+    resourceType: 'image' | 'raw' = 'image',
+    quality: number = 75
+  ): Promise<{ public_id: string; secure_url: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', 'sketchshifter');
+    formData.append('resource_type', resourceType);
+    formData.append('quality', quality.toString());
+
+    console.log('Uploading to Cloudinary:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      resourceType,
+    });
+
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Cloudinary Upload Error:', errorData);
+        throw new Error(errorData.details || errorData.error || 'アップロードに失敗しました');
+      }
+
+      const data = await response.json();
+      console.log('Cloudinary Upload Success:', data);
+
+      if (!data.success || !data.secure_url) {
+        throw new Error('アップロードレスポンスが不正です');
+      }
+
+      return {
+        public_id: data.public_id,
+        secure_url: data.secure_url,
+      };
+    } catch (error) {
+      console.error('Cloudinary Upload Failed:', error);
+      throw error;
+    }
+  };
+
   // フォーム送信ハンドラー
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -127,6 +175,16 @@ export default function SubmitWorkPage() {
     setUploadProgress(0);
 
     try {
+      let thumbnailUrl = '';
+
+      // サムネイルがある場合はCloudinaryにアップロード
+      if (thumbnail) {
+        setUploadProgress(20);
+        const thumbnailData = await uploadToCloudinary(thumbnail, 'image', 75);
+        thumbnailUrl = thumbnailData.secure_url;
+        setUploadProgress(50);
+      }
+
       // FormDataの作成（OpenAPI仕様に合わせて修正）
       const formData = new FormData();
 
@@ -139,17 +197,19 @@ export default function SubmitWorkPage() {
       if (tags) formData.append('tags', tags);
       formData.append('code_shared', codeShared.toString());
 
-      // サムネイル（任意）
-      if (thumbnail) {
-        formData.append('thumbnail', thumbnail);
+      // CloudinaryからのURLを使用
+      if (thumbnailUrl) {
+        formData.append('thumbnail_url', thumbnailUrl);
       }
+
+      setUploadProgress(80);
 
       // TanStack Queryミューテーションを使用してアップロード
       await uploadMutation.mutateAsync(formData);
       setUploadProgress(100);
     } catch (error) {
       console.error('アップロード中にエラーが発生しました:', error);
-      setError('アップロードに失敗しました');
+      setError(error instanceof Error ? error.message : 'アップロードに失敗しました');
       toast.error('アップロードに失敗しました');
     } finally {
       setIsSubmitting(false);
