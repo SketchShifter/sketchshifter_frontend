@@ -176,13 +176,14 @@ export default function SubmitWorkPage() {
 
     try {
       let thumbnailUrl = '';
+      setUploadProgress(30);
 
       // サムネイルがある場合はCloudinaryにアップロード
       if (thumbnail) {
-        setUploadProgress(20);
+        setUploadProgress(50);
         const thumbnailData = await uploadToCloudinary(thumbnail, 'image', 75);
         thumbnailUrl = thumbnailData.secure_url;
-        setUploadProgress(50);
+        setUploadProgress(60);
       }
 
       // FormDataの作成（OpenAPI仕様に合わせて修正）
@@ -196,6 +197,13 @@ export default function SubmitWorkPage() {
       if (description) formData.append('description', description);
       if (tags) formData.append('tags', tags);
       formData.append('code_shared', codeShared.toString());
+
+      // URLパラメータからtaskIdを取得して追加
+      const searchParams = new URLSearchParams(window.location.search);
+      const taskId = searchParams.get('task');
+      if (taskId) {
+        formData.append('task_id', taskId);
+      }
 
       // CloudinaryからのURLを使用
       if (thumbnailUrl) {

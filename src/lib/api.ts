@@ -165,7 +165,7 @@ export const WorksApi = {
 
     // FormDataの内容をログに出力とJSONオブジェクトに変換
     console.log('FormData contents:');
-    const jsonData: Record<string, string | boolean | string[]> = {};
+    const jsonData: Record<string, string | boolean | string[] | number> = {};
     for (const pair of formData.entries()) {
       console.log(
         `${pair[0]}: ${pair[1] instanceof File ? `File: ${pair[1].name} (${pair[1].type})` : pair[1]}`
@@ -186,6 +186,24 @@ export const WorksApi = {
           jsonData[pair[0]] = pair[1];
         }
       }
+    }
+
+    // タスクIDを数値に変換
+    if (jsonData['task_id'] && typeof jsonData['task_id'] === 'string') {
+      jsonData['task_id'] = parseInt(jsonData['task_id'], 10);
+    }
+
+    // tagsが配列ではない場合、配列に変換
+    if (jsonData['tags'] && typeof jsonData['tags'] === 'string') {
+      jsonData['tags'] = jsonData['tags']
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter((tag) => tag);
+    }
+
+    // code_sharedをboolean型に変換
+    if (jsonData['code_shared'] && typeof jsonData['code_shared'] === 'string') {
+      jsonData['code_shared'] = jsonData['code_shared'] === 'true';
     }
 
     // FormDataを使用するためfetchApiではなく直接fetchを使用

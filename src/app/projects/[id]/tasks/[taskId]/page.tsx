@@ -21,6 +21,7 @@ import {
   useUpdateTask,
   useDeleteTask,
   useCreateVote,
+  useProject,
 } from '@/hooks/use-project-hooks';
 // import { useCurrentUser } from '@/hooks/use-auth';
 import { formatDate } from '@/lib/formatDate';
@@ -31,7 +32,7 @@ import { motion } from 'framer-motion';
 export default function TaskDetailPage() {
   const params = useParams();
   //   const router = useRouter();
-  const projectId = parseInt(params.projectId as string);
+  const projectId = parseInt(params.id as string);
   const taskId = parseInt(params.taskId as string);
 
   const [activeTab, setActiveTab] = useState<'works' | 'votes' | 'comments'>('works');
@@ -44,6 +45,7 @@ export default function TaskDetailPage() {
   const [isMultiSelect, setIsMultiSelect] = useState(false);
 
   //   const { data: currentUser } = useCurrentUser();
+  const { data: projectData } = useProject(projectId);
   const { data: taskData, isLoading } = useTask(taskId);
   const { data: worksData } = useTaskWorks(taskId);
   const { data: votesData } = useTaskVotes(taskId);
@@ -80,6 +82,7 @@ export default function TaskDetailPage() {
   const { task } = taskData;
   const works = worksData?.works || [];
   const votes = votesData?.votes || [];
+  const projectName = projectData?.project?.title || 'プロジェクト';
 
   // タスク編集フォームの初期化
   const openEditModal = () => {
@@ -137,8 +140,7 @@ export default function TaskDetailPage() {
         </Link>
         <span className="mx-2">/</span>
         <Link href={`/projects/${projectId}`} className="hover:text-gray-700">
-          {/* TODO: プロジェクト名を表示 */}
-          プロジェクト
+          {projectName}
         </Link>
         <span className="mx-2">/</span>
         <span className="text-gray-900">{task.title}</span>

@@ -24,6 +24,9 @@ import {
   useCloseVote,
   useDeleteVote,
   useUpdateVote,
+  useTaskWorks,
+  useProject,
+  useTask,
 } from '@/hooks/use-project-hooks';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { formatDate } from '@/lib/formatDate';
@@ -31,7 +34,7 @@ import { motion } from 'framer-motion';
 
 export default function VoteDetailPage() {
   const params = useParams();
-  const projectId = parseInt(params.projectId as string);
+  const projectId = parseInt(params.id as string);
   const taskId = parseInt(params.taskId as string);
   const voteId = parseInt(params.voteId as string);
 
@@ -43,9 +46,12 @@ export default function VoteDetailPage() {
   const [editDescription, setEditDescription] = useState('');
   const [editMultiSelect, setEditMultiSelect] = useState(false);
 
-  const { data: currentUser } = useCurrentUser();
+  const { user: currentUser } = useCurrentUser();
   const { data: voteData, isLoading } = useVote(voteId);
   const { data: userVotesData } = useUserVotes(voteId);
+  const { data: worksData } = useTaskWorks(taskId);
+  const { data: projectData } = useProject(projectId);
+  const { data: taskData } = useTask(taskId);
   const castVoteMutation = useCastVote(voteId);
   const removeVoteMutation = useRemoveVote(voteId);
   const addOptionMutation = useAddVoteOption(voteId);
@@ -53,6 +59,8 @@ export default function VoteDetailPage() {
   const closeVoteMutation = useCloseVote(voteId);
   const deleteVoteMutation = useDeleteVote(voteId);
   const updateVoteMutation = useUpdateVote(voteId);
+
+  const works = worksData?.works || [];
 
   if (isLoading) {
     return (
@@ -83,8 +91,10 @@ export default function VoteDetailPage() {
   const { vote } = voteData;
   const userVotes = userVotesData?.votes || [];
   const userVotedOptionIds = userVotes.map((v) => v.option_id);
-  const totalVotes = vote.options.reduce((sum, option) => sum + option.vote_count, 0);
-  const isVoteCreator = currentUser?.id === vote.creator.id.toString();
+  const totalVotes = vote.options
+    ? vote.options.reduce((sum, option) => sum + option.vote_count, 0)
+    : 0;
+  const isVoteCreator = currentUser?.id === vote?.creator?.id?.toString();
 
   // 投票編集フォームの初期化
   const openEditModal = () => {
@@ -166,7 +176,7 @@ export default function VoteDetailPage() {
   };
 
   // 結果をソート（投票数順）
-  const sortedOptions = [...vote.options].sort((a, b) => b.vote_count - a.vote_count);
+  const sortedOptions = [...(vote.options || [])].sort((a, b) => b.vote_count - a.vote_count);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -177,13 +187,11 @@ export default function VoteDetailPage() {
         </Link>
         <span className="mx-2">/</span>
         <Link href={`/projects/${projectId}`} className="hover:text-gray-700">
-          {/* TODO: プロジェクト名を表示 */}
-          プロジェクト
+          {projectData?.project?.title || 'プロジェクト'}
         </Link>
         <span className="mx-2">/</span>
         <Link href={`/projects/${projectId}/tasks/${taskId}`} className="hover:text-gray-700">
-          {/* TODO: タスク名を表示 */}
-          タスク
+          {taskData?.task?.title || 'タスク'}
         </Link>
         <span className="mx-2">/</span>
         <span className="text-gray-900">{vote.title}</span>
@@ -424,7 +432,17 @@ export default function VoteDetailPage() {
                   className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:outline-none"
                 >
                   <option value="">作品を選択...</option>
-                  {/* TODO: タスクの作品一覧を表示 */}
+                  {works && works.length > 0 ? (
+                    works.map((work) => (
+                      <option key={work.id} value={work.id}>
+                        {work.title}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>
+                      作品がありません
+                    </option>
+                  )}
                 </select>
               </div>
               <div className="flex justify-end space-x-4">
